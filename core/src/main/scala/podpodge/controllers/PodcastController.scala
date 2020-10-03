@@ -67,22 +67,22 @@ object PodcastController {
 
   def create(videoIdParam: String): RIO[SttpClient with Blocking, ToResponseMarshallable] =
     for {
-      videoIds         <- UIO(videoIdParam.split(',').toList).filterOrFail(_.nonEmpty)(HttpError(StatusCodes.BadRequest))
-      response         <- YouTubeClient.listPlaylists(videoIds, Config.apiKey)
-      podcasts         <- PodcastDao.createAll(response.items.map(Podcast.fromPlaylist))
-      podcastsWithItems = podcasts.zip(response.items)
-      _                <- ZIO.foreach_(podcastsWithItems) { case (podcast, playlist) =>
-                            ZIO.foreach_(playlist.snippet.thumbnails.highestRes) { thumbnail =>
-                              for {
-                                uri                 <- ZIO.fromEither(Uri.parse(thumbnail.url)).catchAll(ZIO.dieMessage(_))
-                                req                  = basicRequest.get(uri).response(asPath(Config.coversPath.resolve(s"${podcast.id}.jpg")))
-                                downloadedThumbnail <- SttpClient.send(req)
-                                _                   <- ZIO.whenCase(downloadedThumbnail.body) { case Right(_) =>
-                                                         PodcastDao.updateImage(podcast.id, Some(s"${podcast.id}.jpg"))
-                                                       }
-                              } yield ()
-                            }
-                          }
+      videoIds             <- UIO(videoIdParam.split(',').toList).filterOrFail(_.nonEmpty)(HttpError(StatusCodes.BadRequest))
+      playlists            <- YouTubeClient.listPlaylists(videoIds, Config.apiKey).runCollect
+      podcasts             <- PodcastDao.createAll(playlists.toList.map(Podcast.fromPlaylist))
+      podcastsWithPlaylists = podcasts.zip(playlists)
+      _                    <- ZIO.foreach_(podcastsWithPlaylists) { case (podcast, playlist) =>
+                                ZIO.foreach_(playlist.snippet.thumbnails.highestRes) { thumbnail =>
+                                  for {
+                                    uri                 <- ZIO.fromEither(Uri.parse(thumbnail.url)).catchAll(ZIO.dieMessage(_))
+                                    req                  = basicRequest.get(uri).response(asPath(Config.coversPath.resolve(s"${podcast.id}.jpg")))
+                                    downloadedThumbnail <- SttpClient.send(req)
+                                    _                   <- ZIO.whenCase(downloadedThumbnail.body) { case Right(_) =>
+                                                             PodcastDao.updateImage(podcast.id, Some(s"${podcast.id}.jpg"))
+                                                           }
+                                  } yield ()
+                                }
+                              }
     } yield HttpEntity(ContentTypes.`application/json`, podcasts.asJson.spaces2)
 
   def checkForUpdates(
@@ -90,13 +90,14 @@ object PodcastController {
     downloadQueue: Queue[DownloadRequest]
   ): RIO[SttpClient with Blocking with Logging, ToResponseMarshallable] =
     for {
-      podcast         <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
-      externalSources <- EpisodeDao.listExternalSource.map(_.toSet)
-      response        <- YouTubeClient.listPlaylistItems(podcast.externalSource, Config.apiKey)
-      _               <- ZIO.foreach_(response.items.filter(item => !externalSources.contains(item.snippet.resourceId.videoId))) {
-                           item =>
-                             log.trace(s"Putting '${item.snippet.title}' (${item.snippet.resourceId.videoId}) in download queue") *>
-                               downloadQueue.offer(DownloadRequest(id, item))
-                         }
+      podcast           <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
+      externalSources   <- EpisodeDao.listExternalSource.map(_.toSet)
+      playlistItemStream = YouTubeClient.listPlaylistItems(podcast.externalSource, Config.apiKey)
+      _                 <- playlistItemStream
+                             .filter(item => !externalSources.contains(item.snippet.resourceId.videoId))
+                             .foreach { item =>
+                               log.trace(s"Putting '${item.snippet.title}' (${item.snippet.resourceId.videoId}) in download queue") *>
+                                 downloadQueue.offer(DownloadRequest(id, item))
+                             }
     } yield StatusCodes.OK
 }
