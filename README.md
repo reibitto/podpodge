@@ -1,5 +1,7 @@
 # Podpodge
 
+![Scala CI](https://github.com/reibitto/podpodge/workflows/Scala%20CI/badge.svg)
+
 ## What is it?
 
 Podpodge is a server + client for converting YouTube playlists into audio-only RSS feeds that podcast apps can consume.
