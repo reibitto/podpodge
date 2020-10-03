@@ -4,47 +4,54 @@ import sttp.client._
 import sttp.client.circe.asJson
 import sttp.client.httpclient.zio.SttpClient
 import sttp.model.{ Header, MediaType }
-import zio.ZIO
+import zio.Chunk
 import zio.blocking.Blocking
+import zio.stream.ZStream
 
 object YouTubeClient {
-  // TODO: Use pageToken and convert to ZStream
-  def listPlaylists(
-    ids: Seq[String],
-    apiKey: String
-  ): ZIO[SttpClient with Blocking, Throwable, PlaylistListResponse] = {
-    val request = basicRequest
-      .get(
-        uri"https://www.googleapis.com/youtube/v3/playlists".params(
-          "key"        -> apiKey,
-          "id"         -> ids.mkString(","),
-          "part"       -> "snippet,contentDetails,id",
-          "maxResults" -> "50"
+  def listPlaylists(ids: Seq[String], apiKey: String): ZStream[SttpClient with Blocking, Throwable, Playlist] =
+    ZStream.paginateChunkM(Option.empty[String]) { pageToken =>
+      val request = basicRequest
+        .get(
+          uri"https://www.googleapis.com/youtube/v3/playlists".params(
+            Map(
+              "key"        -> apiKey,
+              "id"         -> ids.mkString(","),
+              "part"       -> "snippet,contentDetails,id",
+              "maxResults" -> "50"
+            ) ++ pageToken.map("pageToken" -> _).toMap
+          )
         )
-      )
-      .headers(Header.contentType(MediaType.ApplicationJson))
-      .response(asJson[PlaylistListResponse])
+        .headers(Header.contentType(MediaType.ApplicationJson))
+        .response(asJson[PlaylistListResponse])
 
-    SttpClient.send(request).map(_.body).absolve
-  }
+      SttpClient.send(request).map(_.body).absolve.map { r =>
+        (Chunk.fromIterable(r.items), r.nextPageToken.map(Some(_)))
+      }
+    }
 
-  // TODO: Use pageToken and convert to ZStream
   def listPlaylistItems(
     playlistId: String,
     apiKey: String
-  ): ZIO[SttpClient with Blocking, Throwable, PlaylistItemListResponse] = {
-    val request = basicRequest
-      .get(
-        uri"https://www.googleapis.com/youtube/v3/playlistItems".params(
-          "key"        -> apiKey,
-          "playlistId" -> playlistId,
-          "part"       -> "snippet,contentDetails,id",
-          "maxResults" -> "50"
+  ): ZStream[SttpClient with Blocking, Throwable, PlaylistItem] =
+    ZStream.paginateChunkM(Option.empty[String]) { pageToken =>
+      val request = basicRequest
+        .get(
+          uri"https://www.googleapis.com/youtube/v3/playlistItems".params(
+            Map(
+              "key"        -> apiKey,
+              "playlistId" -> playlistId,
+              "part"       -> "snippet,contentDetails,id",
+              "maxResults" -> "50"
+            ) ++ pageToken.map("pageToken" -> _).toMap
+          )
         )
-      )
-      .headers(Header.contentType(MediaType.ApplicationJson))
-      .response(asJson[PlaylistItemListResponse])
+        .headers(Header.contentType(MediaType.ApplicationJson))
+        .response(asJson[PlaylistItemListResponse])
 
-    SttpClient.send(request).map(_.body).absolve
-  }
+      SttpClient.send(request).map(_.body).absolve.map { r =>
+        (Chunk.fromIterable(r.items), r.nextPageToken.map(Some(_)))
+      }
+    }
+
 }
