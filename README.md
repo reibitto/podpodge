@@ -29,6 +29,8 @@ curl -X POST http://localhost:8080/podcast/{YOUTUBE_PLAYLIST_ID}
 
 (`YOUTUBE_PLAYLIST_ID` is what appears in the address bar when visiting a YouTube playlist page, like https://www.youtube.com/playlist?list=YOUTUBE_PLAYLIST_ID)
 
+*Note:* Private playlists aren't supported (might be possible after [this](https://github.com/reibitto/podpodge/issues/1) is addressed). Using unlisted playlists is the closest alternative for now.
+
 If successful, this should return you a JSON response of the Podcast. Using the ID returned (should be `1` if running for the first time),
 you can call the `check` route to check for and download the episodes:
 
@@ -36,7 +38,7 @@ you can call the `check` route to check for and download the episodes:
 curl -X POST http://localhost:8080/podcast/1/check
 ```
 
-(Note: There is an [issue](https://github.com/reibitto/podpodge/issues/8) for setting up CRON-like schedules per Podcast for automatic checks)
+(*Note:* There is an [issue](https://github.com/reibitto/podpodge/issues/8) for setting up CRON-like schedules per Podcast for automatic checks)
 
 Once that's done, you can access the RSS feed URL and put it into whatever podcast app you use. It'll look something like http://localhost:8080/podcast/1/rss
 
