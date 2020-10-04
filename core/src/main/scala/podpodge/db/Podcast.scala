@@ -26,7 +26,7 @@ final case class Podcast[ID](
 
 object Podcast {
   type Model  = Podcast[PodcastId.Type]
-  type Insert = Podcast[Option[PodcastId.Type]]
+  type Insert = Podcast[Unit]
 
   implicit val encoder: Encoder[Podcast.Model] = deriveEncoder[Podcast.Model]
 

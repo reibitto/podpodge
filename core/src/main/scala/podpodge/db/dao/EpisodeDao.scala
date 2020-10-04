@@ -39,19 +39,19 @@ object EpisodeDao extends SqlDao {
     Task {
       ctx.run {
         quote(
-          query[Episode.Insert].insert(lift(episode.copy(id = EpisodeId.empty))).returningGenerated(_.id)
+          query[Episode[EpisodeId.Type]].insert(lift(episode.copy(id = EpisodeId(0)))).returningGenerated(_.id)
         )
       }
-    }.map(id => episode.copy(id = id.get))
+    }.map(id => episode.copy(id = id))
 
   def createAll(episodes: List[Episode.Insert]): Task[List[Episode.Model]] =
     Task {
       ctx.run {
-        liftQuery(episodes.map(_.copy(id = EpisodeId.empty))).foreach(e =>
-          query[Episode.Insert].insert(e).returningGenerated(_.id)
+        liftQuery(episodes.map(_.copy(id = EpisodeId(0)))).foreach(e =>
+          query[Episode[EpisodeId.Type]].insert(e).returningGenerated(_.id)
         )
       }
-    }.map(ids => episodes.zip(ids).map { case (p, i) => p.copy(id = i.get) })
+    }.map(ids => episodes.zip(ids).map { case (p, i) => p.copy(id = i) })
 
   def updateImage(id: EpisodeId.Type, s: Option[String]): Task[Long]       =
     Task {

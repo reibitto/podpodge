@@ -25,21 +25,20 @@ object PodcastDao extends SqlDao {
   def create(podcast: Podcast.Insert): Task[Podcast.Model] =
     Task {
       ctx.run {
-        quote(query[Podcast.Insert].insert(lift(podcast.copy(id = PodcastId.empty))).returningGenerated(_.id))
+        quote(query[Podcast[PodcastId.Type]].insert(lift(podcast.copy(id = PodcastId(0)))).returningGenerated(_.id))
       }
-    }.map(id => podcast.copy(id = id.get)) // TODO: Abstract this out and avoid `.get`
+    }.map(id => podcast.copy(id = id)) // TODO: Abstract this out
 
   def createAll(podcasts: List[Podcast.Insert]): Task[List[Podcast.Model]] =
     Task {
       ctx.run {
-        liftQuery(podcasts.map(_.copy(id = PodcastId.empty))).foreach(e =>
-          query[Podcast.Insert].insert(e).returningGenerated(_.id)
+        liftQuery(podcasts.map(_.copy(id = PodcastId(0)))).foreach(e =>
+          query[Podcast[PodcastId.Type]].insert(e).returningGenerated(_.id)
         )
       }
-    }.map(ids => podcasts.zip(ids).map { case (p, i) => p.copy(id = i.get) })
-  // TODO: Abstract this out and avoid `.get`
+    }.map(ids => podcasts.zip(ids).map { case (p, i) => p.copy(id = i) })
 
-  def updateImage(id: PodcastId.Type, s: Option[String]): Task[Long] =
+  def updateImage(id: PodcastId.Type, s: Option[String]): Task[Long]       =
     Task {
       ctx.run {
         query[Podcast.Model].filter(_.id == lift(id)).update(_.image -> lift(s))
