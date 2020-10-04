@@ -24,5 +24,7 @@ server.pid
 /reference
 local.conf
 /logs
-/data
+/data/assets/audio
+/data/assets/images
+/data/podpodge.db
 publish.sbt
