@@ -2,7 +2,7 @@ package podpodge.db
 
 import java.time.OffsetDateTime
 
-import io.circe.Encoder
+import io.circe.{ Decoder, Encoder }
 import io.circe.generic.semiauto._
 import podpodge.json.JsonCodec._
 import podpodge.types.PodcastId
@@ -29,6 +29,7 @@ object Podcast {
   type Insert = Podcast[Unit]
 
   implicit val encoder: Encoder[Podcast.Model] = deriveEncoder[Podcast.Model]
+  implicit val decoder: Decoder[Podcast.Model] = deriveDecoder[Podcast.Model]
 
   def fromPlaylist(playlist: Playlist): Podcast.Insert =
     Podcast(

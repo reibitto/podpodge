@@ -11,6 +11,7 @@ object Build {
     val zio   = "1.0.1"
     val circe = "0.13.0"
     val sttp  = "2.2.9"
+    val tapir = "0.17.0-M2"
   }
 
   lazy val ScalacOptions = Seq(
