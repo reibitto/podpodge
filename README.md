@@ -6,7 +6,7 @@
 
 Podpodge is a server + client for converting YouTube playlists into audio-only RSS feeds that podcast apps can consume.
 
-Podpodge is written using [akka-http](https://doc.akka.io/docs/akka-http/current/index.html) + [ZIO](https://zio.dev) + [Quill](https://getquill.io/). It's still a work in progress in the sense that it doesn't
+Podpodge is written using [akka-http](https://doc.akka.io/docs/akka-http/current/index.html) + [tapir](https://tapir.softwaremill.com) + [ZIO](https://zio.dev) + [Quill](https://getquill.io/). It's still a work in progress in the sense that it doesn't
 have a convenient front-end yet (a Scala.js + [Slinky](https://slinky.dev/) frontend will be coming). Podpodge is usable in its current state, but
 it currently only exposes API routes that you have to call yourself for interacting with the DB and getting the RSS feed.
 
@@ -23,26 +23,18 @@ Podpodge server at http://localhost:8080 by default (this can be changed with `P
 example, you might want to change `PODPODGE_HOST` to your network IP (like 192.168.1.100 or whatever it's set to) so that
 you can access it from your phone on the same local network. Or properly host it on a "real" server if you'd like. 😉 
 
-To register a YouTube playlist as a Podcast, call the following route:
+To register a YouTube playlist as a Podcast, call the `POST /podcast/{playlistIds}` route. You can do this with the built-in Swagger integration (which is the default top-level page).
 
-```bash
-curl -X POST http://localhost:8080/podcast/{YOUTUBE_PLAYLIST_ID}
-```
+The playlist ID is what appears in the address bar when visiting a YouTube playlist page, like https://www.youtube.com/playlist?list=YOUTUBE_PLAYLIST_ID
 
-(`YOUTUBE_PLAYLIST_ID` is what appears in the address bar when visiting a YouTube playlist page, like https://www.youtube.com/playlist?list=YOUTUBE_PLAYLIST_ID)
+*Note:* Private playlists aren't supported (might be possible after [this issue](https://github.com/reibitto/podpodge/issues/1) is addressed). Using unlisted playlists is the closest alternative for now.
 
-*Note:* Private playlists aren't supported (might be possible after [this](https://github.com/reibitto/podpodge/issues/1) is addressed). Using unlisted playlists is the closest alternative for now.
-
-If successful, this should return you a JSON response of the Podcast. Using the ID returned (should be `1` if running for the first time),
-you can call the `check` route to check for and download the episodes:
-
-```bash
-curl -X POST http://localhost:8080/podcast/1/check
-```
+If successful, this should return you a JSON response of the Podcast. You can then use the `POST /podcasts/check` route to check for and download the episodes:
 
 (*Note:* There is an [issue](https://github.com/reibitto/podpodge/issues/8) for setting up CRON-like schedules per Podcast for automatic checks)
 
-Once that's done, you can access the RSS feed URL and put it into whatever podcast app you use. It'll look something like http://localhost:8080/podcast/1/rss
+Once that's done, you can access the RSS feed URL and put it into whatever podcast app you use. It'll look something like this (the ID may be different if you have multiple podcasts):
+http://localhost:8080/podcast/1/rss
 
 ## Contributing
 
