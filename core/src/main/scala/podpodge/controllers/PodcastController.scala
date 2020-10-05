@@ -101,10 +101,9 @@ object PodcastController {
       _               <- enqueueDownload(downloadQueue)(podcast, externalSources)
     } yield ()
 
-  private def enqueueDownload(downloadQueue: Queue[DownloadRequest])(
-    podcast: Podcast.Model,
-    excludeExternalSources: Set[String] = Set.empty
-  ): RIO[Logging with SttpClient with Blocking, Unit] =
+  private def enqueueDownload(
+    downloadQueue: Queue[DownloadRequest]
+  )(podcast: Podcast.Model, excludeExternalSources: Set[String]): RIO[Logging with SttpClient with Blocking, Unit] =
     YouTubeClient
       .listPlaylistItems(podcast.externalSource, Config.apiKey)
       .filterNot(item => excludeExternalSources.contains(item.snippet.resourceId.videoId))
