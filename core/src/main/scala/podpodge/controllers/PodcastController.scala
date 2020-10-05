@@ -1,6 +1,5 @@
 package podpodge.controllers
 
-import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.model.{ HttpEntity, MediaTypes, StatusCodes, _ }
 import akka.stream.scaladsl.FileIO
 import podpodge.db.Podcast
@@ -24,7 +23,7 @@ object PodcastController {
 
   def listPodcasts: Task[List[Podcast.Model]] = PodcastDao.list
 
-  def getEpisodeFile(id: EpisodeId.Type): Task[ToResponseMarshallable] =
+  def getEpisodeFile(id: EpisodeId.Type): Task[HttpEntity.Default] =
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       file    <- UIO(Config.audioPath.resolve(s"${episode.externalSource}.mp3").toFile)
@@ -35,7 +34,7 @@ object PodcastController {
       FileIO.fromPath(file.toPath)
     )
 
-  def getPodcastCover(id: PodcastId.Type): Task[ToResponseMarshallable] =
+  def getPodcastCover(id: PodcastId.Type): Task[HttpEntity.Default] =
     for {
       podcast          <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       (mediaType, path) = podcast.image match {
@@ -46,7 +45,7 @@ object PodcastController {
                           }
     } yield HttpEntity.Default(mediaType, path.toFile.length, FileIO.fromPath(path))
 
-  def getEpisodeThumbnail(id: EpisodeId.Type): Task[ToResponseMarshallable] =
+  def getEpisodeThumbnail(id: EpisodeId.Type): Task[HttpEntity.Default] =
     for {
       episode          <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       (mediaType, path) = episode.image match {
