@@ -1,7 +1,7 @@
 package podpodge.http
 
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
-import akka.http.scaladsl.model.StatusCodes.InternalServerError
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import podpodge.{ Env, PodpodgeRuntime }
@@ -20,9 +20,9 @@ object AkkaHttp {
     }
 
     onComplete(asFuture) {
-      case Success(Right(value))           => complete(value)
-      case Success(Left(HttpError(error))) => complete(error)
-      case Success(Left(_)) | Failure(_)   => complete(InternalServerError)
+      case Success(Right(value))               => complete(value)
+      case Success(Left(ApiError.NotFound(_))) => complete(StatusCodes.NotFound)
+      case Success(Left(_)) | Failure(_)       => complete(StatusCodes.InternalServerError)
     }
   }
 }

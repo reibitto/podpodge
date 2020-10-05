@@ -1,12 +1,11 @@
 package podpodge.controllers
 
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
-import akka.http.scaladsl.model.{ ContentTypes, HttpEntity, MediaTypes, StatusCodes, _ }
+import akka.http.scaladsl.model.{ HttpEntity, MediaTypes, StatusCodes, _ }
 import akka.stream.scaladsl.FileIO
-import io.circe.syntax._
 import podpodge.db.Podcast
 import podpodge.db.dao.{ EpisodeDao, PodcastDao }
-import podpodge.http.HttpError
+import podpodge.http.{ ApiError, HttpError }
 import podpodge.types.{ EpisodeId, PodcastId }
 import podpodge.youtube.YouTubeClient
 import podpodge.{ rss, Config, DownloadRequest, RssFormat }
@@ -17,11 +16,13 @@ import zio._
 import zio.blocking.Blocking
 import zio.logging.{ log, Logging }
 
+import scala.xml.Elem
+
 object PodcastController {
-  def getPodcast(id: PodcastId.Type): Task[ToResponseMarshallable] =
-    for {
-      podcast <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
-    } yield HttpEntity(ContentTypes.`text/xml(UTF-8)`, podcast.asJson.spaces2)
+  def getPodcast(id: PodcastId.Type): Task[Podcast.Model] =
+    PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
+
+  def listPodcasts: Task[List[Podcast.Model]] = PodcastDao.list
 
   def getEpisodeFile(id: EpisodeId.Type): Task[ToResponseMarshallable] =
     for {
@@ -37,38 +38,35 @@ object PodcastController {
   def getPodcastCover(id: PodcastId.Type): Task[ToResponseMarshallable] =
     for {
       podcast          <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
-      (mediaType, file) = podcast.image match {
+      (mediaType, path) = podcast.image match {
                             case Some(imageName) =>
                               (MediaTypes.`image/jpeg`, Config.coversPath.resolve(imageName))
                             case None            =>
                               (MediaTypes.`image/png`, Config.defaultAssetsPath.resolve("question.png"))
                           }
-    } yield HttpEntity.Default(mediaType, file.toFile.length, FileIO.fromPath(file))
+    } yield HttpEntity.Default(mediaType, path.toFile.length, FileIO.fromPath(path))
 
   def getEpisodeThumbnail(id: EpisodeId.Type): Task[ToResponseMarshallable] =
     for {
       episode          <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
-      (mediaType, file) = episode.image match {
+      (mediaType, path) = episode.image match {
                             case Some(imageName) =>
                               (MediaTypes.`image/jpeg`, Config.thumbnailsPath.resolve(imageName))
                             case None            =>
                               (MediaTypes.`image/png`, Config.defaultAssetsPath.resolve("question.png"))
                           }
-    } yield HttpEntity.Default(mediaType, file.toFile.length, FileIO.fromPath(file))
+    } yield HttpEntity.Default(mediaType, path.toFile.length, FileIO.fromPath(path))
 
-  def getPodcastRss(id: PodcastId.Type): Task[ToResponseMarshallable] =
+  def getPodcastRss(id: PodcastId.Type): Task[Elem] =
     for {
-      podcast  <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
+      podcast  <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
       episodes <- EpisodeDao.listByPodcast(id)
-    } yield HttpEntity(
-      ContentTypes.`text/xml(UTF-8)`,
-      RssFormat.encode(rss.Podcast.fromDB(podcast, episodes)).toString()
-    )
+    } yield RssFormat.encode(rss.Podcast.fromDB(podcast, episodes))
 
-  def create(videoIdParam: String): RIO[SttpClient with Blocking, ToResponseMarshallable] =
+  def create(playlistIdsParam: String): RIO[SttpClient with Blocking, List[Podcast.Model]] =
     for {
-      videoIds             <- UIO(videoIdParam.split(',').toList).filterOrFail(_.nonEmpty)(HttpError(StatusCodes.BadRequest))
-      playlists            <- YouTubeClient.listPlaylists(videoIds, Config.apiKey).runCollect
+      playlistIds          <- UIO(playlistIdsParam.split(',').toList).filterOrFail(_.nonEmpty)(HttpError(StatusCodes.BadRequest))
+      playlists            <- YouTubeClient.listPlaylists(playlistIds, Config.apiKey).runCollect
       podcasts             <- PodcastDao.createAll(playlists.toList.map(Podcast.fromPlaylist))
       podcastsWithPlaylists = podcasts.zip(playlists)
       _                    <- ZIO.foreach_(podcastsWithPlaylists) { case (podcast, playlist) =>
@@ -83,21 +81,36 @@ object PodcastController {
                                   } yield ()
                                 }
                               }
-    } yield HttpEntity(ContentTypes.`application/json`, podcasts.asJson.spaces2)
+    } yield podcasts
+
+  def checkForUpdatesAll(downloadQueue: Queue[DownloadRequest]): RIO[SttpClient with Blocking with Logging, Unit] =
+    for {
+      podcasts        <- PodcastDao.list
+      externalSources <- EpisodeDao.listExternalSource.map(_.toSet)
+      _               <- ZIO.foreach_(podcasts) { podcast =>
+                           enqueueDownload(downloadQueue)(podcast, externalSources)
+                         }
+    } yield ()
 
   def checkForUpdates(
-    id: PodcastId.Type,
     downloadQueue: Queue[DownloadRequest]
-  ): RIO[SttpClient with Blocking with Logging, ToResponseMarshallable] =
+  )(id: PodcastId.Type): RIO[SttpClient with Blocking with Logging, Unit] =
     for {
-      podcast           <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
-      externalSources   <- EpisodeDao.listExternalSource.map(_.toSet)
-      playlistItemStream = YouTubeClient.listPlaylistItems(podcast.externalSource, Config.apiKey)
-      _                 <- playlistItemStream
-                             .filter(item => !externalSources.contains(item.snippet.resourceId.videoId))
-                             .foreach { item =>
-                               log.trace(s"Putting '${item.snippet.title}' (${item.snippet.resourceId.videoId}) in download queue") *>
-                                 downloadQueue.offer(DownloadRequest(id, item))
-                             }
-    } yield StatusCodes.OK
+      podcast         <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
+      externalSources <- EpisodeDao.listExternalSource.map(_.toSet)
+      _               <- enqueueDownload(downloadQueue)(podcast, externalSources)
+    } yield ()
+
+  private def enqueueDownload(downloadQueue: Queue[DownloadRequest])(
+    podcast: Podcast.Model,
+    excludeExternalSources: Set[String] = Set.empty
+  ): RIO[Logging with SttpClient with Blocking, Unit] =
+    YouTubeClient
+      .listPlaylistItems(podcast.externalSource, Config.apiKey)
+      .filterNot(item => excludeExternalSources.contains(item.snippet.resourceId.videoId))
+      .foreach { item =>
+        log.trace(s"Putting '${item.snippet.title}' (${item.snippet.resourceId.videoId}) in download queue") *>
+          downloadQueue.offer(DownloadRequest(podcast.id, item))
+      }
+
 }
