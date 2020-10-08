@@ -1,12 +1,16 @@
 package podpodge.db
 
+import java.nio.file.Path
 import java.time.OffsetDateTime
 
 import io.circe.{ Decoder, Encoder }
 import io.circe.generic.semiauto._
+import podpodge.Config
 import podpodge.json.JsonCodec._
 import podpodge.types.PodcastId
 import podpodge.youtube.Playlist
+
+import scala.util.Try
 
 final case class Podcast[ID](
   id: ID,
@@ -22,7 +26,10 @@ final case class Podcast[ID](
   summary: String,
   image: Option[String],
   lastCheckDate: Option[OffsetDateTime]
-)
+) {
+  def imagePath: Option[Path] =
+    image.flatMap(name => Try(Config.coversPath.resolve(name)).toOption)
+}
 
 object Podcast {
   type Model  = Podcast[PodcastId.Type]

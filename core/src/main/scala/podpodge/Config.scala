@@ -21,11 +21,7 @@ object Config {
 
   val baseUri: Uri = Uri(serverScheme, serverInterface, serverPort)
 
-  val assetsPath: Path = Paths.get("data/assets")
-
-  // TODO: Remove the need for this folder by putting these kind of assets in `resources` instead
-  val defaultAssetsPath: Path = assetsPath.resolve("default")
-
+  val assetsPath: Path     = Paths.get("data/assets")
   val audioPath: Path      = assetsPath.resolve("audio")
   val imagesPath: Path     = assetsPath.resolve("images")
   val coversPath: Path     = imagesPath.resolve("covers")

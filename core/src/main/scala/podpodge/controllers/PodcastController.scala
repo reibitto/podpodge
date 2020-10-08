@@ -1,11 +1,12 @@
 package podpodge.controllers
 
-import akka.http.scaladsl.model.{ HttpEntity, MediaTypes, StatusCodes, _ }
-import akka.stream.scaladsl.FileIO
+import akka.http.scaladsl.model.{ HttpEntity, MediaTypes, StatusCodes }
+import akka.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
+import akka.stream.scaladsl.{ FileIO, StreamConverters }
 import podpodge.db.Podcast
 import podpodge.db.dao.{ EpisodeDao, PodcastDao }
 import podpodge.http.{ ApiError, HttpError }
-import podpodge.types.{ EpisodeId, PodcastId }
+import podpodge.types.PodcastId
 import podpodge.youtube.YouTubeClient
 import podpodge.{ rss, Config, DownloadRequest, RssFormat }
 import sttp.client.httpclient.zio.SttpClient
@@ -23,48 +24,36 @@ object PodcastController {
 
   def listPodcasts: Task[List[Podcast.Model]] = PodcastDao.list
 
-  def getEpisodeFile(id: EpisodeId.Type): Task[HttpEntity.Default] =
-    for {
-      episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
-      file    <- UIO(Config.audioPath.resolve(s"${episode.externalSource}.mp3").toFile)
-                   .filterOrFail(_.exists)(HttpError(StatusCodes.NotFound))
-    } yield HttpEntity.Default(
-      MediaType.audio("mpeg", MediaType.NotCompressible, "mp3"),
-      file.length,
-      FileIO.fromPath(file.toPath)
-    )
-
-  def getPodcastCover(id: PodcastId.Type): Task[HttpEntity.Default] =
-    for {
-      podcast          <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
-      (mediaType, path) = podcast.image match {
-                            case Some(imageName) =>
-                              (MediaTypes.`image/jpeg`, Config.coversPath.resolve(imageName))
-                            case None            =>
-                              (MediaTypes.`image/png`, Config.defaultAssetsPath.resolve("question.png"))
-                          }
-    } yield HttpEntity.Default(mediaType, path.toFile.length, FileIO.fromPath(path))
-
-  def getEpisodeThumbnail(id: EpisodeId.Type): Task[HttpEntity.Default] =
-    for {
-      episode          <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
-      (mediaType, path) = episode.image match {
-                            case Some(imageName) =>
-                              (MediaTypes.`image/jpeg`, Config.thumbnailsPath.resolve(imageName))
-                            case None            =>
-                              (MediaTypes.`image/png`, Config.defaultAssetsPath.resolve("question.png"))
-                          }
-    } yield HttpEntity.Default(mediaType, path.toFile.length, FileIO.fromPath(path))
-
   def getPodcastRss(id: PodcastId.Type): Task[Elem] =
     for {
       podcast  <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
       episodes <- EpisodeDao.listByPodcast(id)
     } yield RssFormat.encode(rss.Podcast.fromDB(podcast, episodes))
 
-  def create(playlistIdsParam: String): RIO[SttpClient with Blocking, List[Podcast.Model]] =
+  def getPodcastCover(id: PodcastId.Type): Task[HttpEntity.Default] =
     for {
-      playlistIds          <- UIO(playlistIdsParam.split(',').toList).filterOrFail(_.nonEmpty)(HttpError(StatusCodes.BadRequest))
+      podcast <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
+      result  <- podcast.imagePath.map(_.toFile) match {
+                   case Some(imageFile) if imageFile.exists() =>
+                     UIO(HttpEntity.Default(MediaTypes.`image/png`, imageFile.length, FileIO.fromPath(imageFile.toPath)))
+
+                   case _ =>
+                     Option(getClass.getResource("/question.png")).flatMap(ResourceFile.apply) match {
+                       case None           => ZIO.fail(HttpError(StatusCodes.InternalServerError))
+                       case Some(resource) =>
+                         UIO(
+                           HttpEntity.Default(
+                             MediaTypes.`image/jpeg`,
+                             resource.length,
+                             StreamConverters.fromInputStream(() => resource.url.openStream())
+                           )
+                         )
+                     }
+                 }
+    } yield result
+
+  def create(playlistIds: List[String]): RIO[SttpClient with Blocking, List[Podcast.Model]] =
+    for {
       playlists            <- YouTubeClient.listPlaylists(playlistIds, Config.apiKey).runCollect
       podcasts             <- PodcastDao.createAll(playlists.toList.map(Podcast.fromPlaylist))
       podcastsWithPlaylists = podcasts.zip(playlists)
@@ -103,6 +92,7 @@ object PodcastController {
   private def enqueueDownload(
     downloadQueue: Queue[DownloadRequest]
   )(podcast: Podcast.Model, excludeExternalSources: Set[String]): RIO[Logging with SttpClient with Blocking, Unit] =
+    // TODO: Update lastCheckDate here. Will definitely need it for the cron schedule feature.
     YouTubeClient
       .listPlaylistItems(podcast.externalSource, Config.apiKey)
       .filterNot(item => excludeExternalSources.contains(item.snippet.resourceId.videoId))
@@ -110,5 +100,6 @@ object PodcastController {
         log.trace(s"Putting '${item.snippet.title}' (${item.snippet.resourceId.videoId}) in download queue") *>
           downloadQueue.offer(DownloadRequest(podcast.id, item))
       }
+      .tap(_ => log.info(s"Done checking for new podcasts for Podcast ${podcast.id}"))
 
 }

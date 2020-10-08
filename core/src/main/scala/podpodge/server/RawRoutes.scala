@@ -3,7 +3,7 @@ package podpodge.server
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ PathMatcher1, Route }
-import podpodge.controllers.PodcastController
+import podpodge.controllers.{ EpisodeController, PodcastController }
 import podpodge.http.AkkaHttp._
 import podpodge.types.{ EpisodeId, PodcastId }
 
@@ -20,7 +20,7 @@ object RawRoutes {
       path("episode" / EpisodeIdPart / "file") { id =>
         get {
           withRangeSupport {
-            PodcastController.getEpisodeFile(id)
+            EpisodeController.getEpisodeFile(id)
           }
         }
       } ~
@@ -31,7 +31,7 @@ object RawRoutes {
       } ~
       path("thumbnail" / EpisodeIdPart) { id =>
         get {
-          PodcastController.getEpisodeThumbnail(id)
+          EpisodeController.getThumbnail(id)
         }
       }
 

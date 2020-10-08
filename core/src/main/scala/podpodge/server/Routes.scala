@@ -4,12 +4,13 @@ import akka.http.scaladsl.server.Route
 import podpodge.DownloadRequest
 import podpodge.controllers.PodcastController
 import podpodge.db.Podcast
+import podpodge.db.Podcast.Model
 import podpodge.http.ApiError
 import podpodge.types.PodcastId
 import sttp.model.StatusCode
-import sttp.tapir.{ Endpoint, _ }
 import sttp.tapir.json.circe._
 import sttp.tapir.swagger.akkahttp.SwaggerAkka
+import sttp.tapir.{ Endpoint, _ }
 import zio.Queue
 
 import scala.xml.Elem
@@ -50,9 +51,10 @@ object Routes extends TapirSupport {
       .out(statusCode(StatusCode.Ok))
       .description("Checks for new episodes for the specified podcast.")
 
-  val createPodcastEndpoint: Endpoint[String, ApiError, List[Podcast.Model], Any] =
+  val createPodcastEndpoint: Endpoint[List[String], ApiError, List[Model], Any] =
     endpoint.post
-      .in("podcast" / path[String]("playlistIds"))
+      .in("podcast")
+      .in(query[List[String]]("playlistId"))
       .errorOut(apiError)
       .out(jsonBody[List[Podcast.Model]])
       .description(
@@ -83,9 +85,7 @@ object Routes extends TapirSupport {
       checkForUpdatesAllEndpoint,
       checkForUpdatesEndpoint,
       createPodcastEndpoint
-    )
-      .toOpenAPI("Podpodge Docs", "0.1.0")
-      .toYaml
+    ).toOpenAPI("Podpodge Docs", "0.1.0").toYaml
   }
 
 }
