@@ -37,7 +37,7 @@ lazy val core = module("podpodge", Some("core"))
       "dev.zio"                      %% "zio"                        % Version.zio,
       "dev.zio"                      %% "zio-streams"                % Version.zio,
       "dev.zio"                      %% "zio-process"                % "0.1.0",
-      "dev.zio"                      %% "zio-logging"                % "0.5.2",
+      "dev.zio"                      %% "zio-logging"                % "0.5.3",
       "org.scala-lang.modules"       %% "scala-xml"                  % "1.3.0",
       "com.beachape"                 %% "enumeratum"                 % "1.6.1",
       "io.circe"                     %% "circe-core"                 % Version.circe,
