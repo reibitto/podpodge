@@ -6,12 +6,12 @@ import akka.stream.scaladsl.{ FileIO, StreamConverters }
 import podpodge.Config
 import podpodge.db.dao.EpisodeDao
 import podpodge.http.HttpError
-import podpodge.types.{ EpisodeId, _ }
+import podpodge.types._
 import zio.{ Task, UIO, ZIO }
 
 object EpisodeController {
 
-  def getEpisodeFile(id: EpisodeId.Type): Task[HttpEntity.Default] =
+  def getEpisodeFile(id: EpisodeId): Task[HttpEntity.Default] =
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       file    <-
@@ -25,7 +25,7 @@ object EpisodeController {
       FileIO.fromPath(file.toPath)
     )
 
-  def getThumbnail(id: EpisodeId.Type): Task[HttpEntity.Default] =
+  def getThumbnail(id: EpisodeId): Task[HttpEntity.Default] =
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       result  <- episode.imagePath.map(_.toFile) match {

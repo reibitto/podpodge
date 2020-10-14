@@ -20,9 +20,3 @@ object Tagged {
 trait TaggedId[T] extends Tagged[Long, T] {
   def empty: Option[Type] = None
 }
-
-sealed trait PodcastId
-object PodcastId extends TaggedId[PodcastId]
-
-sealed trait EpisodeId
-object EpisodeId extends TaggedId[EpisodeId]

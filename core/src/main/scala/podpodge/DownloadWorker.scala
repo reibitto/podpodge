@@ -2,10 +2,10 @@ package podpodge
 
 import podpodge.db.Episode
 import podpodge.db.dao.EpisodeDao
-import podpodge.types.{ EpisodeId, PodcastId, _ }
+import podpodge.types._
 import podpodge.youtube.{ PlaylistItem, YouTubeDL }
 import sttp.client.httpclient.zio.SttpClient
-import sttp.client.{ basicRequest, _ }
+import sttp.client._
 import sttp.model.Uri
 import zio.blocking.Blocking
 import zio.duration._
@@ -61,4 +61,4 @@ object DownloadWorker {
       .tap(_ => log.info("Download task complete."))
 }
 
-final case class DownloadRequest(podcastId: PodcastId.Type, playlistItem: PlaylistItem)
+final case class DownloadRequest(podcastId: PodcastId, playlistItem: PlaylistItem)

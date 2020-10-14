@@ -7,7 +7,7 @@ import zio.Task
 object EpisodeDao extends SqlDao {
   import ctx._
 
-  def get(id: EpisodeId.Type): Task[Option[Episode.Model]] =
+  def get(id: EpisodeId): Task[Option[Episode.Model]] =
     Task {
       ctx.run {
         quote(query[Episode.Model].filter(_.id == lift(id)).take(1))
@@ -28,7 +28,7 @@ object EpisodeDao extends SqlDao {
       }
     }
 
-  def listByPodcast(id: PodcastId.Type): Task[List[Episode.Model]] =
+  def listByPodcast(id: PodcastId): Task[List[Episode.Model]] =
     Task {
       ctx.run {
         quote(query[Episode.Model].filter(_.podcastId == lift(id)))
@@ -39,7 +39,7 @@ object EpisodeDao extends SqlDao {
     Task {
       ctx.run {
         quote(
-          query[Episode[EpisodeId.Type]].insert(lift(episode.copy(id = EpisodeId(0)))).returningGenerated(_.id)
+          query[Episode[EpisodeId]].insert(lift(episode.copy(id = EpisodeId(0)))).returningGenerated(_.id)
         )
       }
     }.map(id => episode.copy(id = id))
@@ -48,19 +48,19 @@ object EpisodeDao extends SqlDao {
     Task {
       ctx.run {
         liftQuery(episodes.map(_.copy(id = EpisodeId(0)))).foreach(e =>
-          query[Episode[EpisodeId.Type]].insert(e).returningGenerated(_.id)
+          query[Episode[EpisodeId]].insert(e).returningGenerated(_.id)
         )
       }
     }.map(ids => episodes.zip(ids).map { case (p, i) => p.copy(id = i) })
 
-  def updateImage(id: EpisodeId.Type, s: Option[String]): Task[Long]       =
+  def updateImage(id: EpisodeId, s: Option[String]): Task[Long]            =
     Task {
       ctx.run {
         query[Episode.Model].filter(_.id == lift(id)).update(_.image -> lift(s))
       }
     }
 
-  def delete(id: EpisodeId.Type): Task[Long] =
+  def delete(id: EpisodeId): Task[Long] =
     Task {
       ctx.run {
         quote(query[Episode.Model].filter(_.id == lift(id)).delete)

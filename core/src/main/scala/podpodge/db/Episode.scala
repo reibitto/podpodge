@@ -11,7 +11,7 @@ import scala.util.Try
 
 final case class Episode[ID](
   id: ID,
-  podcastId: PodcastId.Type,
+  podcastId: PodcastId,
   guid: String,
   externalSource: String,
   title: String,
@@ -25,6 +25,6 @@ final case class Episode[ID](
 }
 
 object Episode {
-  type Model  = Episode[EpisodeId.Type]
-  type Insert = Episode[Option[EpisodeId.Type]]
+  type Model  = Episode[EpisodeId]
+  type Insert = Episode[Option[EpisodeId]]
 }

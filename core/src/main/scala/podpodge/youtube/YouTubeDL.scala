@@ -4,14 +4,14 @@ import java.io.File
 import java.nio.file.Files
 
 import podpodge.Config
-import podpodge.types.{ PodcastId, _ }
+import podpodge.types._
 import zio.blocking.Blocking
 import zio.logging.{ log, Logging }
 import zio.process.Command
 import zio.{ RIO, Task }
 
 object YouTubeDL {
-  def download(podcastId: PodcastId.Type, videoId: String): RIO[Blocking with Logging, File] = {
+  def download(podcastId: PodcastId, videoId: String): RIO[Blocking with Logging, File] = {
     val audioFormat = "mp3"
 
     val podcastAudioDirectory = Config.audioPath.resolve(podcastId.unwrap.toString)

@@ -19,18 +19,18 @@ import zio.logging.{ log, Logging }
 import scala.xml.Elem
 
 object PodcastController {
-  def getPodcast(id: PodcastId.Type): Task[Podcast.Model] =
+  def getPodcast(id: PodcastId): Task[Podcast.Model] =
     PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
 
   def listPodcasts: Task[List[Podcast.Model]] = PodcastDao.list
 
-  def getPodcastRss(id: PodcastId.Type): Task[Elem] =
+  def getPodcastRss(id: PodcastId): Task[Elem] =
     for {
       podcast  <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
       episodes <- EpisodeDao.listByPodcast(id)
     } yield RssFormat.encode(rss.Podcast.fromDB(podcast, episodes))
 
-  def getPodcastCover(id: PodcastId.Type): Task[HttpEntity.Default] =
+  def getPodcastCover(id: PodcastId): Task[HttpEntity.Default] =
     for {
       podcast <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       result  <- podcast.imagePath.map(_.toFile) match {
@@ -82,7 +82,7 @@ object PodcastController {
 
   def checkForUpdates(
     downloadQueue: Queue[DownloadRequest]
-  )(id: PodcastId.Type): RIO[SttpClient with Blocking with Logging, Unit] =
+  )(id: PodcastId): RIO[SttpClient with Blocking with Logging, Unit] =
     for {
       podcast         <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
       externalSources <- EpisodeDao.listExternalSource.map(_.toSet)

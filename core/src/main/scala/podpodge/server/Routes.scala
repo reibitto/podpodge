@@ -23,16 +23,16 @@ object Routes extends TapirSupport {
       .out(jsonBody[List[Podcast.Model]])
       .description("List all the podcasts currently registered.")
 
-  val getPodcastEndpoint: Endpoint[PodcastId.Type, ApiError, Podcast.Model, Any] =
+  val getPodcastEndpoint: Endpoint[PodcastId, ApiError, Podcast.Model, Any] =
     endpoint
-      .in("podcast" / path[PodcastId.Type]("podcastId"))
+      .in("podcast" / path[PodcastId]("podcastId"))
       .errorOut(apiError)
       .out(jsonBody[Podcast.Model])
       .description("Get a single podcast by its ID.")
 
-  val rssEndpoint: Endpoint[PodcastId.Type, ApiError, Elem, Any] =
+  val rssEndpoint: Endpoint[PodcastId, ApiError, Elem, Any] =
     endpoint.get
-      .in("podcast" / path[PodcastId.Type]("podcastId") / "rss")
+      .in("podcast" / path[PodcastId]("podcastId") / "rss")
       .errorOut(apiError)
       .out(xmlBody[Elem])
       .description("Get the RSS feed for the specified podcast.")
@@ -44,9 +44,9 @@ object Routes extends TapirSupport {
       .out(statusCode(StatusCode.Ok))
       .description("Checks for new episodes for all registered podcasts.")
 
-  val checkForUpdatesEndpoint: Endpoint[PodcastId.Type, ApiError, Unit, Any] =
+  val checkForUpdatesEndpoint: Endpoint[PodcastId, ApiError, Unit, Any] =
     endpoint.post
-      .in("podcast" / path[PodcastId.Type]("podcastId") / "check")
+      .in("podcast" / path[PodcastId]("podcastId") / "check")
       .errorOut(apiError)
       .out(statusCode(StatusCode.Ok))
       .description("Checks for new episodes for the specified podcast.")

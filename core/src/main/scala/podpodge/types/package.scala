@@ -15,4 +15,12 @@ package object types {
     def unwrap: A = Tag.unwrap(self)
   }
 
+  sealed trait _PodcastId
+  object PodcastId extends TaggedId[_PodcastId]
+  type PodcastId = PodcastId.Type
+
+  sealed trait _EpisodeId
+  object EpisodeId extends TaggedId[_EpisodeId]
+  type EpisodeId = EpisodeId.Type
+
 }

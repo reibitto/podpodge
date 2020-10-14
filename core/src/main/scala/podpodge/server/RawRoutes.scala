@@ -10,8 +10,8 @@ import podpodge.types.{ EpisodeId, PodcastId }
 // Routes that are using plain akka-http rather than through tapir's interface.
 object RawRoutes {
 
-  val PodcastIdPart: PathMatcher1[PodcastId.Type] = LongNumber.map(PodcastId(_))
-  val EpisodeIdPart: PathMatcher1[EpisodeId.Type] = LongNumber.map(EpisodeId(_))
+  val PodcastIdPart: PathMatcher1[PodcastId] = LongNumber.map(PodcastId(_))
+  val EpisodeIdPart: PathMatcher1[EpisodeId] = LongNumber.map(EpisodeId(_))
 
   val all: Route =
     pathSingleSlash {
