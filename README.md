@@ -28,7 +28,7 @@ The playlist ID is what appears in the address bar when visiting a YouTube playl
 
 *Note:* Private playlists aren't supported (might be possible after [this issue](https://github.com/reibitto/podpodge/issues/1) is addressed). Using unlisted playlists is the closest alternative for now.
 
-If successful, this should return you a JSON response of the Podcast. You can then use the `POST /podcasts/check` route to check for and download the episodes:
+If successful, this should return you a JSON response of the Podcast. You can then use the `POST /podcasts/check` route to check for new episodes:
 
 (*Note:* There is an [issue](https://github.com/reibitto/podpodge/issues/8) for setting up CRON-like schedules per Podcast for automatic checks)
 

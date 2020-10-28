@@ -60,6 +60,13 @@ object EpisodeDao extends SqlDao {
       }
     }
 
+  def updateMediaFile(id: EpisodeId, s: Option[String]): Task[Long] =
+    Task {
+      ctx.run {
+        query[Episode.Model].filter(_.id == lift(id)).update(_.mediaFile -> lift(s))
+      }
+    }
+
   def delete(id: EpisodeId): Task[Long] =
     Task {
       ctx.run {
