@@ -1,17 +1,19 @@
 package podpodge.server
 
+import java.io.File
+
 import akka.http.scaladsl.server.Route
 import podpodge.DownloadRequest
 import podpodge.controllers.PodcastController
 import podpodge.db.Podcast
 import podpodge.db.Podcast.Model
 import podpodge.http.ApiError
-import podpodge.types.PodcastId
+import podpodge.types.{ EpisodeId, PodcastId }
 import sttp.model.StatusCode
 import sttp.tapir.json.circe._
 import sttp.tapir.swagger.akkahttp.SwaggerAkka
 import sttp.tapir.{ Endpoint, _ }
-import zio.Queue
+import zio.{ Promise, Queue, RefM }
 
 import scala.xml.Elem
 
@@ -57,11 +59,12 @@ object Routes extends TapirSupport {
       .in(query[List[String]]("playlistId"))
       .errorOut(apiError)
       .out(jsonBody[List[Podcast.Model]])
-      .description(
-        "Creates Podcast feeds for the specified YouTube playlist IDs. Note, you can use commas to input multiple playlist IDs."
-      )
+      .description("Creates Podcast feeds for the specified YouTube playlist IDs.")
 
-  def make(downloadQueue: Queue[DownloadRequest]): Route = {
+  def make(
+    downloadQueue: Queue[DownloadRequest],
+    episodesDownloading: RefM[Map[EpisodeId, Promise[Throwable, File]]]
+  ): Route = {
     import akka.http.scaladsl.server.Directives._
 
     listPodcastsEndpoint.toZRoute(_ => PodcastController.listPodcasts) ~
@@ -70,7 +73,7 @@ object Routes extends TapirSupport {
       checkForUpdatesAllEndpoint.toZRoute(_ => PodcastController.checkForUpdatesAll(downloadQueue)) ~
       checkForUpdatesEndpoint.toZRoute(PodcastController.checkForUpdates(downloadQueue)) ~
       createPodcastEndpoint.toZRoute(PodcastController.create) ~
-      RawRoutes.all ~
+      RawRoutes.all(episodesDownloading) ~
       new SwaggerAkka(openApiDocs).routes
   }
 

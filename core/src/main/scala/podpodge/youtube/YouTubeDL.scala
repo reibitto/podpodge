@@ -12,8 +12,7 @@ import zio.{ RIO, Task }
 
 object YouTubeDL {
   def download(podcastId: PodcastId, videoId: String): RIO[Blocking with Logging, File] = {
-    val audioFormat = "mp3"
-
+    val audioFormat           = "mp3"
     val podcastAudioDirectory = Config.audioPath.resolve(podcastId.unwrap.toString)
     val outputFile            = podcastAudioDirectory.resolve(s"${videoId}.${audioFormat}").toFile
 
