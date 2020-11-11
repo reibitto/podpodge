@@ -35,16 +35,16 @@ object Podcast {
       podcast.author,
       podcast.subtitle,
       podcast.summary,
-      Config.baseUri.path("cover", podcast.id.unwrap.toString),
+      Config.baseUri.withPath("cover", podcast.id.unwrap.toString),
       episodes.map { episode =>
         Episode(
-          Config.baseUri.path("episode", episode.id.unwrap.toString, "file"),
+          Config.baseUri.withPath("episode", episode.id.unwrap.toString, "file"),
           episode.externalSource,
           uri"https://www.youtube.com/watch?v=${episode.externalSource}",
           episode.title,
           episode.publishDate,
           episode.duration,
-          Config.baseUri.path("thumbnail", episode.id.unwrap.toString)
+          Config.baseUri.withPath("thumbnail", episode.id.unwrap.toString)
         )
       }
     )

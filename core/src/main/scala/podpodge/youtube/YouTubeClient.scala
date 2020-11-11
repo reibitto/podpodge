@@ -13,7 +13,7 @@ object YouTubeClient {
     ZStream.paginateChunkM(Option.empty[String]) { pageToken =>
       val request = basicRequest
         .get(
-          uri"https://www.googleapis.com/youtube/v3/playlists".params(
+          uri"https://www.googleapis.com/youtube/v3/playlists".withParams(
             Map(
               "key"        -> apiKey,
               "id"         -> ids.mkString(","),
@@ -37,7 +37,7 @@ object YouTubeClient {
     ZStream.paginateChunkM(Option.empty[String]) { pageToken =>
       val request = basicRequest
         .get(
-          uri"https://www.googleapis.com/youtube/v3/playlistItems".params(
+          uri"https://www.googleapis.com/youtube/v3/playlistItems".withParams(
             Map(
               "key"        -> apiKey,
               "playlistId" -> playlistId,
