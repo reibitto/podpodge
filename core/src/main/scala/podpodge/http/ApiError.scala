@@ -13,6 +13,13 @@ object ApiError {
     implicit val encoder: Encoder[NotFound] = deriveEncoder[NotFound]
   }
 
+  final case class BadRequest(message: String) extends ApiError
+
+  object BadRequest {
+    implicit val decoder: Decoder[BadRequest] = deriveDecoder[BadRequest]
+    implicit val encoder: Encoder[BadRequest] = deriveEncoder[BadRequest]
+  }
+
   final case class InternalError(message: String) extends ApiError
 
   object InternalError {

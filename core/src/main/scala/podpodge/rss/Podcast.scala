@@ -4,7 +4,6 @@ import java.time.OffsetDateTime
 
 import podpodge.types._
 import podpodge.{ db, Config }
-import sttp.client._
 import sttp.model.Uri
 
 final case class Podcast(
@@ -26,7 +25,7 @@ object Podcast {
   def fromDB(podcast: db.Podcast.Model, episodes: List[db.Episode.Model]): Podcast =
     Podcast(
       podcast.title,
-      uri"https://www.youtube.com/playlist?list=${podcast.externalSource}",
+      podcast.linkUrl,
       podcast.description,
       podcast.category,
       podcast.generator,
@@ -40,7 +39,7 @@ object Podcast {
         Episode(
           Config.baseUri.withPath("episode", episode.id.unwrap.toString, "file"),
           episode.externalSource,
-          uri"https://www.youtube.com/watch?v=${episode.externalSource}",
+          episode.linkUrl(podcast.sourceType),
           episode.title,
           episode.publishDate,
           episode.duration,

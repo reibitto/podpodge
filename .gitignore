@@ -28,4 +28,5 @@ local.conf
 /data/assets/audio
 /data/assets/images
 /data/podpodge.db
+/data/custom
 publish.sbt

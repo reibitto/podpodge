@@ -8,10 +8,11 @@ object Build {
   val PodpodgeVersion = "0.0.1"
 
   object Version {
-    val zio   = "1.0.3"
-    val circe = "0.13.0"
-    val sttp  = "2.2.9"
-    val tapir = "0.17.0-M8"
+    val zio        = "1.0.3"
+    val circe      = "0.13.0"
+    val enumeratum = "1.6.1"
+    val sttp       = "2.2.9"
+    val tapir      = "0.17.0-M8"
   }
 
   lazy val ScalacOptions = Seq(

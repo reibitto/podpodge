@@ -4,7 +4,7 @@
 
 ## What is it?
 
-Podpodge is a server + client for converting YouTube playlists into audio-only RSS feeds that podcast apps can consume.
+Podpodge is a server + client for converting YouTube playlists (or plain audio files) into audio-only RSS feeds that podcast apps can consume.
 
 Podpodge is written using [akka-http](https://doc.akka.io/docs/akka-http/current/index.html) + [tapir](https://tapir.softwaremill.com) + [ZIO](https://zio.dev) + [Quill](https://getquill.io/). It's still a work in progress in the sense that it doesn't
 have the nicest front-end yet (a Scala.js + [Slinky](https://slinky.dev/) front-end will be coming). Though it does have built-in Swagger integration so that you don't have to construct the API requests yourself for interacting with the DB and getting the RSS feed.
@@ -22,7 +22,8 @@ Podpodge server at http://localhost:8080 by default (this can be changed with `P
 example, you might want to change `PODPODGE_HOST` to your network IP (like 192.168.1.100 or whatever it's set to) so that
 you can access it from your phone on the same local network. Or properly host it on a "real" server if you'd like. 😉 
 
-To register a YouTube playlist as a Podcast, call the `POST /podcast/{playlistIds}` route. You can do this with the built-in Swagger integration (which is the default top-level page).
+To register a YouTube playlist as a Podcast, call the `POST /podcast/{sourceType}` route (where `sourceType` can be set
+to `youTube` or `directory`). You can do this with the built-in Swagger integration (which is the default top-level page).
 
 The playlist ID is what appears in the address bar when visiting a YouTube playlist page, like https://www.youtube.com/playlist?list=YOUTUBE_PLAYLIST_ID
 
