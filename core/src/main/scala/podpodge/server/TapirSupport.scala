@@ -48,6 +48,7 @@ trait TapirSupport {
 
   val apiError = oneOf[ApiError](
     statusMapping(StatusCode.NotFound, jsonBody[ApiError.NotFound]),
+    statusMapping(StatusCode.BadRequest, jsonBody[ApiError.BadRequest]),
     statusMapping(StatusCode.InternalServerError, jsonBody[ApiError.InternalError])
   )
 }

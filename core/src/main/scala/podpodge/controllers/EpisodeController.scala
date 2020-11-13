@@ -1,12 +1,14 @@
 package podpodge.controllers
 
 import java.io.File
+import java.nio.file.Paths
 
 import akka.http.scaladsl.model.{ HttpEntity, MediaType, MediaTypes, StatusCodes }
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
 import akka.stream.scaladsl.{ FileIO, StreamConverters }
 import podpodge.Config
-import podpodge.db.dao.EpisodeDao
+import podpodge.db.Episode
+import podpodge.db.dao.{ EpisodeDao, PodcastDao }
 import podpodge.http.HttpError
 import podpodge.types._
 import podpodge.youtube.YouTubeDL
@@ -22,8 +24,7 @@ object EpisodeController {
       file    <-
         UIO(
           Config.audioPath.resolve(episode.podcastId.unwrap.toString).resolve(s"${episode.externalSource}.mp3").toFile
-        )
-          .filterOrFail(_.exists)(HttpError(StatusCodes.NotFound))
+        ).filterOrFail(_.exists)(HttpError(StatusCodes.NotFound))
     } yield HttpEntity.Default(
       MediaType.audio("mpeg", MediaType.NotCompressible, "mp3"),
       file.length,
@@ -34,9 +35,29 @@ object EpisodeController {
     episodesDownloading: RefM[Map[EpisodeId, Promise[Throwable, File]]]
   )(id: EpisodeId): RIO[Blocking with Logging, HttpEntity.Default] =
     for {
-      episode    <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
+      episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
+      podcast <- PodcastDao.get(episode.podcastId).someOrFail(HttpError(StatusCodes.NotFound))
+      result  <- podcast.sourceType match {
+                   case SourceType.YouTube   => getEpisodeFileOnDemandYouTube(episodesDownloading)(episode)
+                   case SourceType.Directory =>
+                     val mediaPath = Paths.get(episode.externalSource)
+
+                     UIO(
+                       HttpEntity.Default(
+                         MediaType.audio("mpeg", MediaType.NotCompressible, "mp3"),
+                         mediaPath.toFile.length,
+                         FileIO.fromPath(mediaPath)
+                       )
+                     )
+                 }
+    } yield result
+
+  def getEpisodeFileOnDemandYouTube(
+    episodesDownloading: RefM[Map[EpisodeId, Promise[Throwable, File]]]
+  )(episode: Episode.Model): RIO[Blocking with Logging, HttpEntity.Default] =
+    for {
       promiseMap <- episodesDownloading.updateAndGet { downloadMap =>
-                      downloadMap.get(id) match {
+                      downloadMap.get(episode.id) match {
                         case None    =>
                           for {
                             p <- Promise.make[Throwable, File]
@@ -44,16 +65,16 @@ object EpisodeController {
                                    .download(episode.podcastId, episode.externalSource)
                                    .onExit { e =>
                                      e.toEither.fold(p.fail, p.succeed) *>
-                                       episodesDownloading.updateAndGet(m => UIO(m - id))
+                                       episodesDownloading.updateAndGet(m => UIO(m - episode.id))
                                    }
                                    .forkDaemon
-                          } yield downloadMap + (id -> p)
+                          } yield downloadMap + (episode.id -> p)
 
                         case Some(_) => UIO(downloadMap)
                       }
                     }
-      mediaFile  <- promiseMap(id).await
-      _          <- EpisodeDao.updateMediaFile(id, Some(mediaFile.getName))
+      mediaFile  <- promiseMap(episode.id).await
+      _          <- EpisodeDao.updateMediaFile(episode.id, Some(mediaFile.getName))
     } yield HttpEntity.Default(
       MediaType.audio("mpeg", MediaType.NotCompressible, "mp3"),
       mediaFile.length,

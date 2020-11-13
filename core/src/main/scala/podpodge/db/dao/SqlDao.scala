@@ -32,4 +32,10 @@ trait MappedEncodings {
 
   implicit def taggedIdDecoder[T]: MappedEncoding[Long, Long @@ T] =
     MappedEncoding[Long, Long @@ T](Tag[Long, T])
+
+  implicit val sourceTypeEncoder: MappedEncoding[SourceType, String] =
+    MappedEncoding[SourceType, String](_.entryName)
+
+  implicit val sourceTypeDecoder: MappedEncoding[String, SourceType] =
+    MappedEncoding[String, SourceType](SourceType.withName)
 }

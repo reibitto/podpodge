@@ -3,21 +3,22 @@ package podpodge.server
 import java.io.File
 
 import akka.http.scaladsl.server.Route
-import podpodge.DownloadRequest
+import podpodge.CreateEpisodeRequest
 import podpodge.controllers.PodcastController
 import podpodge.db.Podcast
 import podpodge.db.Podcast.Model
 import podpodge.http.ApiError
-import podpodge.types.{ EpisodeId, PodcastId }
+import podpodge.types.{ EpisodeId, PodcastId, SourceType }
 import sttp.model.StatusCode
+import sttp.tapir._
+import sttp.tapir.codec.enumeratum.TapirCodecEnumeratum
 import sttp.tapir.json.circe._
 import sttp.tapir.swagger.akkahttp.SwaggerAkka
-import sttp.tapir.{ Endpoint, _ }
 import zio.{ Promise, Queue, RefM }
 
 import scala.xml.Elem
 
-object Routes extends TapirSupport {
+object Routes extends TapirSupport with TapirCodecEnumeratum {
   val listPodcastsEndpoint: Endpoint[Unit, ApiError, List[Podcast.Model], Any] =
     endpoint
       .in("podcasts")
@@ -53,16 +54,16 @@ object Routes extends TapirSupport {
       .out(statusCode(StatusCode.Ok))
       .description("Checks for new episodes for the specified podcast.")
 
-  val createPodcastEndpoint: Endpoint[List[String], ApiError, List[Model], Any] =
+  val createPodcastEndpoint: Endpoint[(SourceType, List[String]), ApiError, List[Model], Any] =
     endpoint.post
-      .in("podcast")
+      .in("podcast" / path[SourceType]("sourceType"))
       .in(query[List[String]]("playlistId"))
       .errorOut(apiError)
       .out(jsonBody[List[Podcast.Model]])
       .description("Creates Podcast feeds for the specified YouTube playlist IDs.")
 
   def make(
-    downloadQueue: Queue[DownloadRequest],
+    downloadQueue: Queue[CreateEpisodeRequest],
     episodesDownloading: RefM[Map[EpisodeId, Promise[Throwable, File]]]
   ): Route = {
     import akka.http.scaladsl.server.Directives._
@@ -72,7 +73,7 @@ object Routes extends TapirSupport {
       rssEndpoint.toZRoute(PodcastController.getPodcastRss) ~
       checkForUpdatesAllEndpoint.toZRoute(_ => PodcastController.checkForUpdatesAll(downloadQueue)) ~
       checkForUpdatesEndpoint.toZRoute(PodcastController.checkForUpdates(downloadQueue)) ~
-      createPodcastEndpoint.toZRoute(PodcastController.create) ~
+      createPodcastEndpoint.toZRoute((PodcastController.create _).tupled(_)) ~
       RawRoutes.all(episodesDownloading) ~
       new SwaggerAkka(openApiDocs).routes
   }

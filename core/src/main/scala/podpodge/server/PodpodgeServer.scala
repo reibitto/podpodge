@@ -7,7 +7,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import podpodge.db.Migration
 import podpodge.types.EpisodeId
-import podpodge.{ Config, DownloadRequest, DownloadWorker }
+import podpodge.{ Config, CreateEpisodeRequest, DownloadWorker }
 import sttp.client.httpclient.zio.SttpClient
 import zio.blocking.Blocking
 import zio.logging.{ log, Logging }
@@ -23,7 +23,7 @@ object PodpodgeServer {
                                .when(Config.apiKey.isEmpty)
       _                   <- Migration.migrate.toManaged_
       _                   <- Config.ensureDirectoriesExist.toManaged_
-      downloadQueue       <- ZManaged.fromEffect(ZQueue.unbounded[DownloadRequest])
+      downloadQueue       <- ZManaged.fromEffect(ZQueue.unbounded[CreateEpisodeRequest])
       _                   <- DownloadWorker.make(downloadQueue).forkDaemon.toManaged_
       episodesDownloading <- ZRefM.makeManaged(Map.empty[EpisodeId, Promise[Throwable, File]])
       server              <- ZManaged.make(
