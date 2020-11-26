@@ -58,7 +58,7 @@ lazy val core = module("podpodge", Some("core"))
       "com.softwaremill.sttp.tapir"  %% "tapir-swagger-ui-akka-http" % Version.tapir,
       "io.getquill"                  %% "quill-jdbc"                 % "3.6.0-RC3",
       "org.xerial"                    % "sqlite-jdbc"                % "3.32.3.2",
-      "org.flywaydb"                  % "flyway-core"                % "7.2.1",
+      "org.flywaydb"                  % "flyway-core"                % "7.3.0",
       "org.slf4j"                     % "slf4j-nop"                  % "1.7.30"
     )
   )
