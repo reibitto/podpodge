@@ -44,7 +44,7 @@ lazy val core = module("podpodge", Some("core"))
       "io.circe"                     %% "circe-core"                 % Version.circe,
       "io.circe"                     %% "circe-parser"               % Version.circe,
       "io.circe"                     %% "circe-generic"              % Version.circe,
-      "com.typesafe.akka"            %% "akka-http"                  % "10.2.1",
+      "com.typesafe.akka"            %% "akka-http"                  % "10.2.2",
       "com.typesafe.akka"            %% "akka-actor-typed"           % "2.6.10",
       "com.typesafe.akka"            %% "akka-stream"                % "2.6.10",
       "com.softwaremill.sttp.client" %% "core"                       % Version.sttp,
