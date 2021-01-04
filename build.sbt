@@ -7,6 +7,7 @@ lazy val root = project
   .in(file("."))
   .aggregate(core)
   .settings(
+    name := "podpodge",
     addCommandAlias("run", "podpodge/run"),
     addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll"),
     addCommandAlias("fmtCheck", "all root/scalafmtSbtCheck root/scalafmtCheckAll"),
