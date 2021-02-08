@@ -1,7 +1,5 @@
 package podpodge.server
 
-import java.io.File
-
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
@@ -9,9 +7,11 @@ import podpodge.db.Migration
 import podpodge.types.EpisodeId
 import podpodge.{ Config, CreateEpisodeRequest, DownloadWorker }
 import sttp.client.httpclient.zio.SttpClient
+import zio._
 import zio.blocking.Blocking
 import zio.logging.{ log, Logging }
-import zio._
+
+import java.io.File
 
 object PodpodgeServer {
   def make: ZManaged[Logging with Blocking with SttpClient, Throwable, Http.ServerBinding] = {
@@ -19,7 +19,7 @@ object PodpodgeServer {
 
     for {
       _                   <- ZManaged
-                               .dieMessage("You need a YouTube API to run Podpodge. Refer to the README for further details.")
+                               .dieMessage("You need a YouTube API key to run Podpodge. Refer to the README for further details.")
                                .when(Config.apiKey.isEmpty)
       _                   <- Migration.migrate.toManaged_
       _                   <- Config.ensureDirectoriesExist.toManaged_
