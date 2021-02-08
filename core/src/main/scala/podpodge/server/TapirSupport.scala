@@ -11,17 +11,23 @@ import sttp.tapir.json.circe.jsonBody
 import sttp.tapir.server.akkahttp.{ AkkaHttpServerOptions, RichAkkaHttpEndpoint }
 import sttp.tapir.{ oneOf, statusMapping, Codec, CodecFormat, Endpoint, Schema, SchemaType, Validator }
 import zio.logging.log
+import zio.prelude._
 import zio.{ UIO, ZIO }
 
 import scala.xml.{ Elem, XML }
 
 trait TapirSupport {
-  implicit def taggedIdSchema[T]: Schema[Long @@ T] = Schema(SchemaType.SInteger)
+  implicit def taggedIdSchema[T <: RichNewtype[Long]#Type]: Schema[T] = Schema(SchemaType.SInteger)
 
-  implicit def taggedIdValidator[T]: Validator[Long @@ T] = Validator.min(1L).contramap(_.unwrap)
+  implicit def taggedIdValidator[T <: RichNewtype[Long]#Type](implicit
+    equiv: Equivalence[Long, T]
+  ): Validator[T] =
+    Validator.min(1L).contramap(RichNewtype.unwrap(_))
 
-  implicit def taggedIdCodec[T]: Codec[String, Long @@ T, CodecFormat.TextPlain] =
-    Codec.long.map(Tag[Long, T](_))(_.unwrap)
+  implicit def taggedIdCodec[T <: RichNewtype[Long]#Type](implicit
+    equiv: Equivalence[Long, T]
+  ): Codec[String, T, CodecFormat.TextPlain] =
+    Codec.long.map(RichNewtype.wrap(_))(x => RichNewtype.unwrap(x))
 
   implicit val xmlCodec: Codec[String, Elem, CodecFormat.Xml] =
     implicitly[PlainCodec[String]].map(XML.loadString(_))(_.toString).format(CodecFormat.Xml())
