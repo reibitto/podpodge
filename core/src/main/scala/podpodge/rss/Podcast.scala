@@ -1,10 +1,9 @@
 package podpodge.rss
 
-import java.time.OffsetDateTime
-
-import podpodge.types._
 import podpodge.{ db, Config }
 import sttp.model.Uri
+
+import java.time.OffsetDateTime
 
 final case class Podcast(
   title: String,

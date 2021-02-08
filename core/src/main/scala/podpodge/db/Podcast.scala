@@ -1,11 +1,7 @@
 package podpodge.db
 
-import java.io.File
-import java.nio.file.Path
-import java.time.{ Instant, OffsetDateTime, ZoneOffset }
-
-import io.circe.{ Decoder, Encoder }
 import io.circe.generic.semiauto._
+import io.circe.{ Decoder, Encoder }
 import podpodge.Config
 import podpodge.json.JsonCodec._
 import podpodge.types.{ PodcastId, SourceType }
@@ -13,6 +9,9 @@ import podpodge.youtube.Playlist
 import sttp.client._
 import sttp.model.Uri
 
+import java.io.File
+import java.nio.file.Path
+import java.time.{ Instant, OffsetDateTime, ZoneOffset }
 import scala.util.Try
 
 final case class Podcast[ID](
