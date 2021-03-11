@@ -12,7 +12,7 @@ object Build {
     val circe      = "0.13.0"
     val enumeratum = "1.6.1"
     val sttp       = "2.2.9"
-    val tapir      = "0.17.0-M8"
+    val tapir      = "0.17.16"
   }
 
   lazy val ScalacOptions = Seq(
