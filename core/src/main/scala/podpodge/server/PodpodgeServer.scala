@@ -12,9 +12,10 @@ import zio.blocking.Blocking
 import zio.logging.{ log, Logging }
 
 import java.io.File
+import java.sql.Connection
 
 object PodpodgeServer {
-  def make: ZManaged[Logging with Blocking with SttpClient, Throwable, Http.ServerBinding] = {
+  def make: ZManaged[Logging with Has[Connection] with Blocking with SttpClient, Throwable, Http.ServerBinding] = {
     implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "podpodge-system")
 
     for {

@@ -1,11 +1,11 @@
 package podpodge.controllers
 
 import java.nio.file.{ Files, Paths }
-
 import akka.http.scaladsl.model.{ HttpEntity, MediaTypes, StatusCodes }
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
 import akka.stream.scaladsl.{ FileIO, StreamConverters }
 import podpodge.db.Podcast
+import podpodge.db.Podcast.Model
 import podpodge.db.dao.{ EpisodeDao, PodcastDao }
 import podpodge.http.{ ApiError, HttpError }
 import podpodge.types.{ PodcastId, SourceType }
@@ -19,21 +19,22 @@ import zio.blocking.Blocking
 import zio.logging.{ log, Logging }
 import zio.stream.ZStream
 
+import java.sql.{ Connection, SQLException }
 import scala.xml.Elem
 
 object PodcastController {
-  def getPodcast(id: PodcastId): Task[Podcast.Model] =
+  def getPodcast(id: PodcastId): RIO[Has[Connection] with Blocking, Model] =
     PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
 
-  def listPodcasts: Task[List[Podcast.Model]] = PodcastDao.list
+  def listPodcasts: ZIO[Has[Connection] with Blocking, SQLException, List[Model]] = PodcastDao.list
 
-  def getPodcastRss(id: PodcastId): Task[Elem] =
+  def getPodcastRss(id: PodcastId): RIO[Has[Connection] with Blocking, Elem] =
     for {
       podcast  <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
       episodes <- EpisodeDao.listByPodcast(id)
     } yield RssFormat.encode(rss.Podcast.fromDB(podcast, episodes))
 
-  def getPodcastCover(id: PodcastId): Task[HttpEntity.Default] =
+  def getPodcastCover(id: PodcastId): RIO[Has[Connection] with Blocking, HttpEntity.Default] =
     for {
       podcast <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       result  <- podcast.imagePath.map(_.toFile) match {
@@ -55,7 +56,10 @@ object PodcastController {
                  }
     } yield result
 
-  def create(sourceType: SourceType, sources: List[String]): RIO[SttpClient with Blocking, List[Podcast.Model]] =
+  def create(
+    sourceType: SourceType,
+    sources: List[String]
+  ): RIO[SttpClient with Has[Connection] with Blocking, List[Podcast.Model]] =
     sourceType match {
       case SourceType.YouTube =>
         for {
@@ -88,7 +92,9 @@ object PodcastController {
         }
     }
 
-  def checkForUpdatesAll(downloadQueue: Queue[CreateEpisodeRequest]): RIO[SttpClient with Blocking with Logging, Unit] =
+  def checkForUpdatesAll(
+    downloadQueue: Queue[CreateEpisodeRequest]
+  ): RIO[SttpClient with Has[Connection] with Blocking with Logging, Unit] =
     for {
       podcasts        <- PodcastDao.list
       externalSources <- EpisodeDao.listExternalSource.map(_.toSet)
@@ -99,7 +105,7 @@ object PodcastController {
 
   def checkForUpdates(
     downloadQueue: Queue[CreateEpisodeRequest]
-  )(id: PodcastId): RIO[SttpClient with Blocking with Logging, Unit] =
+  )(id: PodcastId): RIO[SttpClient with Has[Connection] with Blocking with Logging, Unit] =
     for {
       podcast         <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
       externalSources <- EpisodeDao.listExternalSource.map(_.toSet)
@@ -117,7 +123,7 @@ object PodcastController {
   private def enqueueDownloadFile(
     downloadQueue: Queue[CreateEpisodeRequest]
   )(podcast: Podcast.Model, excludeExternalSources: Set[String]): RIO[Logging, Unit] = {
-    import podpodge.io.FileExtensions._
+    import podpodge.util.FileExtensions._
 
     val excludeExternalPaths = excludeExternalSources.map(s => Paths.get(s).normalize().toFile)
 
