@@ -1,6 +1,6 @@
 package podpodge.db.dao
 
-import io.getquill.{ MappedEncoding, SnakeCase, SqliteJdbcContext }
+import io.getquill.{ MappedEncoding, SnakeCase, SqliteZioJdbcContext }
 import podpodge.types._
 import zio.prelude.Equivalence
 
@@ -8,11 +8,11 @@ import java.time.format.DateTimeFormatter
 import java.time.{ Duration, OffsetDateTime }
 
 trait SqlDao extends MappedEncodings {
-  val ctx: SqliteJdbcContext[SnakeCase.type] = SqlDao.ctx
+  val ctx: SqliteZioJdbcContext[SnakeCase.type] = SqlDao.ctx
 }
 
 object SqlDao {
-  lazy val ctx: SqliteJdbcContext[SnakeCase.type] = new SqliteJdbcContext(SnakeCase, "ctx")
+  lazy val ctx: SqliteZioJdbcContext[SnakeCase.type] = new SqliteZioJdbcContext(SnakeCase)
 }
 
 trait MappedEncodings {

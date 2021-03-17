@@ -1,7 +1,5 @@
 package podpodge
 
-import java.time.{ Instant, ZoneOffset }
-
 import podpodge.db.Episode
 import podpodge.db.dao.EpisodeDao
 import podpodge.types._
@@ -12,10 +10,13 @@ import zio.blocking.Blocking
 import zio.duration._
 import zio.logging.{ log, Logging }
 import zio.stream.ZStream
-import zio.{ Queue, URIO, ZIO }
+import zio.{ Has, Queue, URIO, ZIO }
+
+import java.sql.Connection
+import java.time.{ Instant, ZoneOffset }
 
 object DownloadWorker {
-  def make(queue: Queue[CreateEpisodeRequest]): URIO[Logging with Blocking with SttpClient, Unit] =
+  def make(queue: Queue[CreateEpisodeRequest]): URIO[Logging with Has[Connection] with Blocking with SttpClient, Unit] =
     ZStream
       .fromQueue(queue)
       .foreach { request =>
@@ -29,7 +30,9 @@ object DownloadWorker {
         }.ignore
       }
 
-  def createEpisodeYouTube(request: CreateEpisodeRequest.YouTube): ZIO[SttpClient with Blocking, Throwable, Unit] = {
+  def createEpisodeYouTube(
+    request: CreateEpisodeRequest.YouTube
+  ): ZIO[SttpClient with Has[Connection] with Blocking, Throwable, Unit] = {
     val videoId = request.playlistItem.snippet.resourceId.videoId
 
     for {
@@ -68,7 +71,9 @@ object DownloadWorker {
     } yield ()
   }
 
-  def createEpisodeFile(request: CreateEpisodeRequest.File): ZIO[SttpClient with Blocking, Throwable, Unit] =
+  def createEpisodeFile(
+    request: CreateEpisodeRequest.File
+  ): ZIO[SttpClient with Has[Connection] with Blocking, Throwable, Unit] =
     for {
       _ <- EpisodeDao.create(
              Episode(

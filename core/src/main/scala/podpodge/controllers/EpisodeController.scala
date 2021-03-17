@@ -2,7 +2,6 @@ package podpodge.controllers
 
 import java.io.File
 import java.nio.file.Paths
-
 import akka.http.scaladsl.model.{ HttpEntity, MediaType, MediaTypes, StatusCodes }
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
 import akka.stream.scaladsl.{ FileIO, StreamConverters }
@@ -16,9 +15,11 @@ import zio.blocking.Blocking
 import zio.logging.Logging
 import zio._
 
+import java.sql.Connection
+
 object EpisodeController {
 
-  def getEpisodeFile(id: EpisodeId): Task[HttpEntity.Default] =
+  def getEpisodeFile(id: EpisodeId): RIO[Has[Connection] with Blocking, HttpEntity.Default] =
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       file    <-
@@ -33,7 +34,7 @@ object EpisodeController {
 
   def getEpisodeFileOnDemand(
     episodesDownloading: RefM[Map[EpisodeId, Promise[Throwable, File]]]
-  )(id: EpisodeId): RIO[Blocking with Logging, HttpEntity.Default] =
+  )(id: EpisodeId): RIO[Has[Connection] with Blocking with Logging, HttpEntity.Default] =
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       podcast <- PodcastDao.get(episode.podcastId).someOrFail(HttpError(StatusCodes.NotFound))
@@ -54,7 +55,7 @@ object EpisodeController {
 
   def getEpisodeFileOnDemandYouTube(
     episodesDownloading: RefM[Map[EpisodeId, Promise[Throwable, File]]]
-  )(episode: Episode.Model): RIO[Blocking with Logging, HttpEntity.Default] =
+  )(episode: Episode.Model): RIO[Has[Connection] with Blocking with Logging, HttpEntity.Default] =
     for {
       promiseMap <- episodesDownloading.updateAndGet { downloadMap =>
                       downloadMap.get(episode.id) match {
@@ -81,7 +82,7 @@ object EpisodeController {
       FileIO.fromPath(mediaFile.toPath)
     )
 
-  def getThumbnail(id: EpisodeId): Task[HttpEntity.Default] =
+  def getThumbnail(id: EpisodeId): RIO[Has[Connection] with Blocking, HttpEntity.Default] =
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       result  <- episode.imagePath.map(_.toFile) match {
