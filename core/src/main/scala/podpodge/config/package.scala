@@ -35,7 +35,7 @@ package object config {
         defaultSource   = ConfigSource.fromMap(
                             Map(
                               ServerHost.configKey   -> "localhost",
-                              ServerPort.configKey   -> "80",
+                              ServerPort.configKey   -> "8080",
                               ServerScheme.configKey -> "http"
                             )
                           )
