@@ -28,15 +28,21 @@ trait MappedEncodings {
   implicit val durationDecoder: MappedEncoding[String, Duration] =
     MappedEncoding[String, Duration](Duration.parse)
 
-  implicit def taggedIdEncoder[T <: RichNewtype[Long]#Type](implicit
-    equiv: Equivalence[Long, T]
-  ): MappedEncoding[T, Long] =
-    MappedEncoding[T, Long](RichNewtype.unwrap(_))
+  implicit def newtypeEncoder[A, T <: RichNewtype[A]#Type](implicit equiv: Equivalence[A, T]): MappedEncoding[T, A] =
+    MappedEncoding[T, A](RichNewtype.unwrap(_))
 
-  implicit def taggedIdDecoder[T <: RichNewtype[Long]#Type](implicit
-    equiv: Equivalence[Long, T]
-  ): MappedEncoding[Long, T] =
-    MappedEncoding[Long, T](RichNewtype.wrap(_))
+  implicit def newtypeDecoder[A, T <: RichNewtype[A]#Type](implicit equiv: Equivalence[A, T]): MappedEncoding[A, T] =
+    MappedEncoding[A, T](RichNewtype.wrap(_))
+
+  implicit def newtypeSmartEncoder[A, T <: RichNewtypeSmart[A]#Type](implicit
+    equiv: Equivalence[A, T]
+  ): MappedEncoding[T, A] =
+    MappedEncoding[T, A](RichNewtypeSmart.unwrap(_))
+
+  implicit def newtypeSmartDecoder[A, T <: RichNewtypeSmart[A]#Type](implicit
+    equiv: Equivalence[A, T]
+  ): MappedEncoding[A, T] =
+    MappedEncoding[A, T](RichNewtypeSmart.wrap(_))
 
   implicit val sourceTypeEncoder: MappedEncoding[SourceType, String] =
     MappedEncoding[SourceType, String](_.entryName)

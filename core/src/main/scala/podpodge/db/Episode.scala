@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.file.Path
 import java.time.{ Duration, OffsetDateTime }
 
-import podpodge.Config
+import podpodge.StaticConfig
 import podpodge.types.{ EpisodeId, PodcastId, _ }
 import sttp.client._
 import sttp.model.Uri
@@ -23,7 +23,7 @@ final case class Episode[ID](
   duration: Duration
 ) {
   def imagePath: Option[Path] =
-    image.flatMap(name => Try(Config.thumbnailsPath.resolve(podcastId.unwrap.toString).resolve(name)).toOption)
+    image.flatMap(name => Try(StaticConfig.thumbnailsPath.resolve(podcastId.unwrap.toString).resolve(name)).toOption)
 
   def linkUrl(sourceType: SourceType): Uri = sourceType match {
     case SourceType.YouTube   => uri"https://www.youtube.com/playlist?list=$externalSource"
