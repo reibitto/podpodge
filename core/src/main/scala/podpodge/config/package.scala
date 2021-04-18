@@ -34,10 +34,9 @@ package object config {
         envSource      <- ConfigSource.fromSystemEnv
         defaultSource   = ConfigSource.fromMap(
                             Map(
-                              YouTubeApiKey.configKey -> "",
-                              ServerHost.configKey    -> "localhost",
-                              ServerPort.configKey    -> "80",
-                              ServerScheme.configKey  -> "http"
+                              ServerHost.configKey   -> "localhost",
+                              ServerPort.configKey   -> "80",
+                              ServerScheme.configKey -> "http"
                             )
                           )
         fromDb         <-
