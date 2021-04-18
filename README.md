@@ -15,6 +15,8 @@ have the nicest front-end yet (a Scala.js + [Slinky](https://slinky.dev/) front-
 the `PODPODGE_YOUTUBE_API_KEY` environment variable.
 - [youtube-dl](https://github.com/ytdl-org/youtube-dl/blob/master/README.md) must be installed (there's an [open issue](https://github.com/reibitto/podpodge/issues/6) for automatically downloading it)
 
+_* These are only requirements if `sourceType` is `youTube`. For `directory` you can ignore this._
+
 ## Usage
 
 Run the server either using sbt (`sbt run`) or create an executable jar (`sbt assembly`) and run that. This will run the

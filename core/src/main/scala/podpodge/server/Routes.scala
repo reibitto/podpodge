@@ -1,14 +1,24 @@
 package podpodge.server
 
 import java.io.File
-
 import akka.http.scaladsl.server.Route
 import podpodge.CreateEpisodeRequest
-import podpodge.controllers.PodcastController
-import podpodge.db.Podcast
+import podpodge.controllers.{ ConfigurationController, PodcastController }
+import podpodge.db.{ Configuration, Podcast }
 import podpodge.db.Podcast.Model
+import podpodge.db.dao.ConfigurationDao
+import podpodge.db.patch.PatchConfiguration
 import podpodge.http.ApiError
-import podpodge.types.{ EpisodeId, PodcastId, SourceType }
+import podpodge.types.{
+  EpisodeId,
+  PodcastId,
+  ServerHost,
+  ServerPort,
+  ServerScheme,
+  SourceType,
+  Tristate,
+  YouTubeApiKey
+}
 import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.codec.enumeratum.TapirCodecEnumeratum
@@ -62,6 +72,32 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
       .out(jsonBody[List[Podcast.Model]])
       .description("Creates Podcast feeds for the specified YouTube playlist IDs.")
 
+  val getConfigEndpoint: Endpoint[Unit, ApiError, Configuration.Model, Any] =
+    endpoint.get
+      .in("configuration")
+      .errorOut(apiError)
+      .out(jsonBody[Configuration.Model])
+      .description("Get Podpodge configuration")
+
+  val updateConfigEndpoint: Endpoint[PatchConfiguration, ApiError, Configuration.Model, Any] =
+    endpoint.patch
+      .in("configuration")
+      .in(
+        jsonBody[PatchConfiguration].example(
+          PatchConfiguration(
+            Tristate.Some(YouTubeApiKey("YOUR_API_KEY")),
+            Tristate.Some(ServerHost("localhost")),
+            Tristate.Some(ServerPort.makeUnsafe(80)),
+            Tristate.Some(ServerScheme("http"))
+          )
+        )
+      )
+      .errorOut(apiError)
+      .out(jsonBody[Configuration.Model])
+      .description(
+        "Updates Podpodge configuration. Pass `null` to clear out a field. If you want a field to remain unchanged, simply leave the field out from the JSON body completely."
+      )
+
   def make(
     downloadQueue: Queue[CreateEpisodeRequest],
     episodesDownloading: RefM[Map[EpisodeId, Promise[Throwable, File]]]
@@ -74,6 +110,13 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
       checkForUpdatesAllEndpoint.toZRoute(_ => PodcastController.checkForUpdatesAll(downloadQueue)) ~
       checkForUpdatesEndpoint.toZRoute(PodcastController.checkForUpdates(downloadQueue)) ~
       createPodcastEndpoint.toZRoute((PodcastController.create _).tupled(_)) ~
+      getConfigEndpoint.toZRoute(_ => ConfigurationController.getPrimary) ~
+      updateConfigEndpoint.toZRoute({ patch =>
+        for {
+          defaultConfiguration <- ConfigurationDao.getPrimary
+          result               <- ConfigurationController.patch(defaultConfiguration.id, patch)
+        } yield result
+      }) ~
       RawRoutes.all(episodesDownloading) ~
       new SwaggerAkka(openApiDocs).routes
   }
@@ -88,7 +131,9 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
       rssEndpoint,
       checkForUpdatesAllEndpoint,
       checkForUpdatesEndpoint,
-      createPodcastEndpoint
+      createPodcastEndpoint,
+      getConfigEndpoint,
+      updateConfigEndpoint
     ).toOpenAPI("Podpodge Docs", "0.1.0").toYaml
   }
 

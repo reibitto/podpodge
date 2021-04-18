@@ -5,7 +5,7 @@ import java.nio.file.Paths
 import akka.http.scaladsl.model.{ HttpEntity, MediaType, MediaTypes, StatusCodes }
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
 import akka.stream.scaladsl.{ FileIO, StreamConverters }
-import podpodge.Config
+import podpodge.StaticConfig
 import podpodge.db.Episode
 import podpodge.db.dao.{ EpisodeDao, PodcastDao }
 import podpodge.http.HttpError
@@ -24,7 +24,10 @@ object EpisodeController {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       file    <-
         UIO(
-          Config.audioPath.resolve(episode.podcastId.unwrap.toString).resolve(s"${episode.externalSource}.mp3").toFile
+          StaticConfig.audioPath
+            .resolve(episode.podcastId.unwrap.toString)
+            .resolve(s"${episode.externalSource}.mp3")
+            .toFile
         ).filterOrFail(_.exists)(HttpError(StatusCodes.NotFound))
     } yield HttpEntity.Default(
       MediaType.audio("mpeg", MediaType.NotCompressible, "mp3"),

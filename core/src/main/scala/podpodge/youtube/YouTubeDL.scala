@@ -3,7 +3,7 @@ package podpodge.youtube
 import java.io.File
 import java.nio.file.Files
 
-import podpodge.Config
+import podpodge.StaticConfig
 import podpodge.types._
 import zio.blocking.Blocking
 import zio.logging.{ log, Logging }
@@ -13,7 +13,7 @@ import zio.{ RIO, Task }
 object YouTubeDL {
   def download(podcastId: PodcastId, videoId: String): RIO[Blocking with Logging, File] = {
     val audioFormat           = "mp3"
-    val podcastAudioDirectory = Config.audioPath.resolve(podcastId.unwrap.toString)
+    val podcastAudioDirectory = StaticConfig.audioPath.resolve(podcastId.unwrap.toString)
     val outputFile            = podcastAudioDirectory.resolve(s"${videoId}.${audioFormat}").toFile
 
     if (outputFile.exists) {

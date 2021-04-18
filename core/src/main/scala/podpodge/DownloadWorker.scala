@@ -56,7 +56,7 @@ object DownloadWorker {
                               .get(uri)
                               .response(
                                 asPath(
-                                  Config.thumbnailsPath
+                                  StaticConfig.thumbnailsPath
                                     .resolve(request.podcastId.unwrap.toString)
                                     .resolve(s"${episode.id}.jpg")
                                 )
