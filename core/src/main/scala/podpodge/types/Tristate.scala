@@ -41,12 +41,12 @@ object Tristate {
         else
           implicitly[Decoder[A]].apply(c) match {
             case Right(a) => Right(Tristate.Some(a))
-            case Left(df) => Left(df)
+            case Left(f)  => Left(f)
           }
 
       case c: FailedCursor =>
         if (!c.incorrectFocus) Right(Tristate.Unspecified)
-        else Left(DecodingFailure("[A]Tristate[A]", c.history))
+        else Left(DecodingFailure("Unable to decode Tristate", c.history))
     }
   }
 }

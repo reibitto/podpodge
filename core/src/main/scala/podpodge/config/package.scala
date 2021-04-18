@@ -25,7 +25,7 @@ package object config {
         int(path).transformOrFailLeft(n => ns.make(n).runEither)(ns.unwrap)
 
       val configDesc: ConfigDescriptor[PodpodgeConfig] =
-        (stringNew(YouTubeApiKey)(YouTubeApiKey.configKey) |@|
+        (stringNew(YouTubeApiKey)(YouTubeApiKey.configKey).optional |@|
           stringNew(ServerHost)(ServerHost.configKey) |@|
           intSmart(ServerPort)(ServerPort.configKey) |@|
           stringNew(ServerScheme)(ServerScheme.configKey))(PodpodgeConfig.apply, PodpodgeConfig.unapply)
@@ -58,7 +58,7 @@ package object config {
   }
 
   case class PodpodgeConfig(
-    youTubeApiKey: YouTubeApiKey, // TODO: Make this `Option[YouTubeApiKey]` because it's not strictly required if you use a different SourceType
+    youTubeApiKey: Option[YouTubeApiKey],
     serverHost: ServerHost,
     serverPort: ServerPort,
     serverScheme: ServerScheme
@@ -71,7 +71,7 @@ package object config {
   def youTubeApiKey: RIO[Config, YouTubeApiKey] =
     ZIO
       .access[Config](_.get.youTubeApiKey)
-      .filterOrFail(_.unwrap.nonEmpty)(
+      .someOrFail(
         new Exception(
           s"${YouTubeApiKey.configKey} is empty but it's required for this operation. You can set it as an environment variable or in the `configuration` table."
         )
