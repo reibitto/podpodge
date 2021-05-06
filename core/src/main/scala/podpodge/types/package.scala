@@ -35,7 +35,8 @@ package object types {
       def unwrap: A = self.unwrap(value)
     }
 
-    def makeUnsafe(value: A): Type = make(value).runEither.fold(e => throw new IllegalArgumentException(e), identity)
+    def makeUnsafe(value: A): Type =
+      make(value).fold(e => throw new IllegalArgumentException(e.mkString("; ")), identity)
   }
 
   object RichNewtypeSmart {

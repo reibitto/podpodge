@@ -22,7 +22,7 @@ package object config {
         string(path).transform(ns.wrap(_), ns.unwrap)
 
       def intSmart(ns: RichNewtypeSmart[Int])(path: String): ConfigDescriptor[ns.Type] =
-        int(path).transformOrFailLeft(n => ns.make(n).runEither)(ns.unwrap)
+        int(path).transformOrFailLeft(n => ns.make(n).toEitherWith(_.mkString("; ")))(ns.unwrap)
 
       val configDesc: ConfigDescriptor[PodpodgeConfig] =
         (stringNew(YouTubeApiKey)(YouTubeApiKey.configKey).optional |@|
