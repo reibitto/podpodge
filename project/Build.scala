@@ -52,16 +52,16 @@ object Build {
   def defaultSettings(projectName: String) =
     Seq(
       name := projectName,
-      javaOptions in Test += "-Duser.timezone=UTC",
+      Test / javaOptions += "-Duser.timezone=UTC",
       scalacOptions := ScalacOptions,
-      scalaVersion in ThisBuild := ScalaVersion,
+      ThisBuild / scalaVersion := ScalaVersion,
       libraryDependencies ++= Plugins.BaseCompilerPlugins,
       incOptions ~= (_.withLogRecompileOnMacro(false)),
       autoAPIMappings := true,
       resolvers := Resolvers,
       testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-      fork in Test := true,
-      logBuffered in Test := false
+      Test / fork := true,
+      Test / logBuffered := false
     )
 
   lazy val Resolvers = Seq(
