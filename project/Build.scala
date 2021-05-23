@@ -3,12 +3,12 @@ import Keys._
 import scala.Console
 
 object Build {
-  val ScalaVersion = "2.13.5"
+  val ScalaVersion = "2.13.6"
 
   val PodpodgeVersion = "0.0.1"
 
   object Version {
-    val zio        = "1.0.7"
+    val zio        = "1.0.8"
     val circe      = "0.13.0"
     val enumeratum = "1.6.1"
     val sttp       = "2.2.9"
