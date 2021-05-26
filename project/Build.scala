@@ -9,7 +9,7 @@ object Build {
 
   object Version {
     val zio        = "1.0.8"
-    val circe      = "0.13.0"
+    val circe      = "0.14.0"
     val enumeratum = "1.6.1"
     val sttp       = "2.2.9"
     val tapir      = "0.17.0-M8"
