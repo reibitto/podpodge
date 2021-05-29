@@ -41,7 +41,7 @@ package object config {
                           )
         fromDb         <-
           ConfigurationDao.getPrimary.bimap(
-            t => ReadError.SourceError[String](s"Error reading config from database: ${t.getMessage}"),
+            t => ReadError.SourceError(s"Error reading config from database: ${t.getMessage}"),
             c =>
               (
                 c.youTubeApiKey.map(s => YouTubeApiKey.configKey -> s.unwrap) ++
