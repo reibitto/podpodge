@@ -38,24 +38,26 @@ object YouTubeClient {
     playlistId: String,
     youTubeApiKey: YouTubeApiKey
   ): ZStream[SttpClient with Blocking, Throwable, PlaylistItem] =
-    ZStream.paginateChunkM(Option.empty[String]) { pageToken =>
-      val request = basicRequest
-        .get(
-          uri"https://www.googleapis.com/youtube/v3/playlistItems".withParams(
-            Map(
-              "key"        -> youTubeApiKey.unwrap,
-              "playlistId" -> playlistId,
-              "part"       -> "snippet,contentDetails,id",
-              "maxResults" -> "50"
-            ) ++ pageToken.map("pageToken" -> _).toMap
+    ZStream
+      .paginateChunkM(Option.empty[String]) { pageToken =>
+        val request = basicRequest
+          .get(
+            uri"https://www.googleapis.com/youtube/v3/playlistItems".withParams(
+              Map(
+                "key"        -> youTubeApiKey.unwrap,
+                "playlistId" -> playlistId,
+                "part"       -> "snippet,contentDetails,id",
+                "maxResults" -> "50"
+              ) ++ pageToken.map("pageToken" -> _).toMap
+            )
           )
-        )
-        .headers(Header.contentType(MediaType.ApplicationJson))
-        .response(asJson[PlaylistItemListResponse])
+          .headers(Header.contentType(MediaType.ApplicationJson))
+          .response(asJson[PlaylistItemListResponse])
 
-      SttpClient.send(request).map(_.body).absolve.map { r =>
-        (Chunk.fromIterable(r.items), r.nextPageToken.map(Some(_)))
+        SttpClient.send(request).map(_.body).absolve.map { r =>
+          (Chunk.fromIterable(r.items), r.nextPageToken.map(Some(_)))
+        }
       }
-    }
+      .filterNot(_.isPrivate)
 
 }
