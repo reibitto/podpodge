@@ -32,23 +32,24 @@ lazy val root = project
 lazy val core = module("podpodge", Some("core"))
   .settings(
     fork := true,
-    baseDirectory in run := file("."),
-    baseDirectory in reStart := file("."),
+    run / baseDirectory := file("."),
+    reStart / baseDirectory := file("."),
     libraryDependencies ++= Seq(
       "dev.zio"                      %% "zio"                        % Version.zio,
       "dev.zio"                      %% "zio-streams"                % Version.zio,
-      "dev.zio"                      %% "zio-process"                % "0.3.0",
-      "dev.zio"                      %% "zio-logging"                % "0.5.8",
-      "dev.zio"                      %% "zio-prelude"                % "1.0.0-RC3",
-      "org.scala-lang.modules"       %% "scala-xml"                  % "1.3.0",
+      "dev.zio"                      %% "zio-process"                % "0.5.0",
+      "dev.zio"                      %% "zio-config"                 % "1.0.6",
+      "dev.zio"                      %% "zio-logging"                % "0.5.11",
+      "dev.zio"                      %% "zio-prelude"                % "1.0.0-RC5",
+      "org.scala-lang.modules"       %% "scala-xml"                  % "2.0.0",
       "com.beachape"                 %% "enumeratum"                 % Version.enumeratum,
       "com.beachape"                 %% "enumeratum-circe"           % Version.enumeratum,
       "io.circe"                     %% "circe-core"                 % Version.circe,
       "io.circe"                     %% "circe-parser"               % Version.circe,
       "io.circe"                     %% "circe-generic"              % Version.circe,
       "com.typesafe.akka"            %% "akka-http"                  % "10.2.4",
-      "com.typesafe.akka"            %% "akka-actor-typed"           % "2.6.13",
-      "com.typesafe.akka"            %% "akka-stream"                % "2.6.13",
+      "com.typesafe.akka"            %% "akka-actor-typed"           % "2.6.15",
+      "com.typesafe.akka"            %% "akka-stream"                % "2.6.15",
       "com.softwaremill.sttp.client" %% "core"                       % Version.sttp,
       "com.softwaremill.sttp.client" %% "circe"                      % Version.sttp,
       "com.softwaremill.sttp.client" %% "httpclient-backend-zio"     % Version.sttp,
@@ -58,11 +59,11 @@ lazy val core = module("podpodge", Some("core"))
       "com.softwaremill.sttp.tapir"  %% "tapir-openapi-docs"         % Version.tapir,
       "com.softwaremill.sttp.tapir"  %% "tapir-openapi-circe-yaml"   % Version.tapir,
       "com.softwaremill.sttp.tapir"  %% "tapir-swagger-ui-akka-http" % Version.tapir,
-      "io.getquill"                  %% "quill-jdbc"                 % "3.7.0",
-      "io.getquill"                  %% "quill-jdbc-zio"             % "3.7.0",
+      "io.getquill"                  %% "quill-jdbc"                 % Version.quill,
+      "io.getquill"                  %% "quill-jdbc-zio"             % Version.quill,
       "org.xerial"                    % "sqlite-jdbc"                % "3.34.0",
-      "org.flywaydb"                  % "flyway-core"                % "7.7.0",
-      "org.slf4j"                     % "slf4j-nop"                  % "1.7.30"
+      "org.flywaydb"                  % "flyway-core"                % "7.10.0",
+      "org.slf4j"                     % "slf4j-nop"                  % "1.7.31"
     )
   )
 

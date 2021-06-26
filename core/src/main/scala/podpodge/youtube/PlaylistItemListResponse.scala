@@ -15,7 +15,9 @@ object PlaylistItemListResponse {
   implicit val decoder: Decoder[PlaylistItemListResponse] = deriveDecoder[PlaylistItemListResponse]
 }
 
-final case class PlaylistItem(id: String, snippet: PlaylistItemSnippet, contentDetails: PlaylistItemContentDetails)
+final case class PlaylistItem(id: String, snippet: PlaylistItemSnippet, contentDetails: PlaylistItemContentDetails) {
+  def isPrivate: Boolean = contentDetails.videoPublishedAt.isEmpty
+}
 
 object PlaylistItem {
   implicit val decoder: Decoder[PlaylistItem] = deriveDecoder[PlaylistItem]
@@ -62,7 +64,7 @@ object ResourceId {
   implicit val decoder: Decoder[ResourceId] = deriveDecoder[ResourceId]
 }
 
-final case class PlaylistItemContentDetails(videoId: String, videoPublishedAt: OffsetDateTime)
+final case class PlaylistItemContentDetails(videoId: String, videoPublishedAt: Option[OffsetDateTime])
 
 object PlaylistItemContentDetails {
   implicit val decoder: Decoder[PlaylistItemContentDetails] = deriveDecoder[PlaylistItemContentDetails]

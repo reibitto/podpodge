@@ -3,7 +3,7 @@ package podpodge.youtube
 import java.io.File
 import java.nio.file.Files
 
-import podpodge.Config
+import podpodge.StaticConfig
 import podpodge.types._
 import zio.blocking.Blocking
 import zio.logging.{ log, Logging }
@@ -12,8 +12,10 @@ import zio.{ RIO, Task }
 
 object YouTubeDL {
   def download(podcastId: PodcastId, videoId: String): RIO[Blocking with Logging, File] = {
+    // TODO: Support other audio formats in the future. Note that `EpisodeController` and so on
+    // will have to be updated as well since "mp3" is hardcoded there.
     val audioFormat           = "mp3"
-    val podcastAudioDirectory = Config.audioPath.resolve(podcastId.unwrap.toString)
+    val podcastAudioDirectory = StaticConfig.audioPath.resolve(podcastId.unwrap.toString)
     val outputFile            = podcastAudioDirectory.resolve(s"${videoId}.${audioFormat}").toFile
 
     if (outputFile.exists) {
@@ -21,12 +23,15 @@ object YouTubeDL {
     } else {
       for {
         workingDirectory <- Task(Files.createDirectories(podcastAudioDirectory))
+        // VBR can cause slowness with seeks in podcast apps, so we use a constant bitrate instead.
         _                <- Command(
                               "youtube-dl",
                               "--no-call-home",
                               "--extract-audio",
                               "--audio-format",
                               audioFormat,
+                              "--audio-quality",
+                              "128K",
                               "--output",
                               outputFile.getName,
                               videoId

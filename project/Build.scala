@@ -3,16 +3,17 @@ import Keys._
 import scala.Console
 
 object Build {
-  val ScalaVersion = "2.13.5"
+  val ScalaVersion = "2.13.6"
 
   val PodpodgeVersion = "0.0.1"
 
   object Version {
-    val zio        = "1.0.5"
-    val circe      = "0.13.0"
-    val enumeratum = "1.6.1"
+    val circe      = "0.14.1"
+    val enumeratum = "1.7.0"
+    val quill      = "3.7.2"
     val sttp       = "2.2.9"
-    val tapir      = "0.17.19"
+    val tapir      = "0.17.0-M8"
+    val zio        = "1.0.9"
   }
 
   lazy val ScalacOptions = Seq(
@@ -52,16 +53,16 @@ object Build {
   def defaultSettings(projectName: String) =
     Seq(
       name := projectName,
-      javaOptions in Test += "-Duser.timezone=UTC",
+      Test / javaOptions += "-Duser.timezone=UTC",
       scalacOptions := ScalacOptions,
-      scalaVersion in ThisBuild := ScalaVersion,
+      ThisBuild / scalaVersion := ScalaVersion,
       libraryDependencies ++= Plugins.BaseCompilerPlugins,
       incOptions ~= (_.withLogRecompileOnMacro(false)),
       autoAPIMappings := true,
       resolvers := Resolvers,
       testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-      fork in Test := true,
-      logBuffered in Test := false
+      Test / fork := true,
+      Test / logBuffered := false
     )
 
   lazy val Resolvers = Seq(

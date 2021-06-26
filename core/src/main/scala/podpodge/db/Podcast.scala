@@ -2,8 +2,7 @@ package podpodge.db
 
 import io.circe.generic.semiauto._
 import io.circe.{ Decoder, Encoder }
-import podpodge.Config
-import podpodge.json.JsonCodec._
+import podpodge.StaticConfig
 import podpodge.types.{ PodcastId, SourceType }
 import podpodge.youtube.Playlist
 import sttp.client._
@@ -31,7 +30,7 @@ final case class Podcast[ID](
   lastCheckDate: Option[OffsetDateTime]
 ) {
   def imagePath: Option[Path] =
-    image.flatMap(name => Try(Config.coversPath.resolve(name)).toOption)
+    image.flatMap(name => Try(StaticConfig.coversPath.resolve(name)).toOption)
 
   def linkUrl: Uri = sourceType match {
     case SourceType.YouTube   => uri"https://www.youtube.com/playlist?list=$externalSource"

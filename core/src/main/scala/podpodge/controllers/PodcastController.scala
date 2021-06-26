@@ -4,13 +4,14 @@ import java.nio.file.{ Files, Paths }
 import akka.http.scaladsl.model.{ HttpEntity, MediaTypes, StatusCodes }
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
 import akka.stream.scaladsl.{ FileIO, StreamConverters }
+import podpodge.config.Config
 import podpodge.db.Podcast
 import podpodge.db.Podcast.Model
 import podpodge.db.dao.{ EpisodeDao, PodcastDao }
 import podpodge.http.{ ApiError, HttpError }
 import podpodge.types.{ PodcastId, SourceType }
 import podpodge.youtube.YouTubeClient
-import podpodge.{ rss, Config, CreateEpisodeRequest, RssFormat }
+import podpodge.{ config, rss, CreateEpisodeRequest, RssFormat, StaticConfig }
 import sttp.client.httpclient.zio.SttpClient
 import sttp.client.{ asPath, basicRequest }
 import sttp.model.Uri
@@ -28,11 +29,12 @@ object PodcastController {
 
   def listPodcasts: ZIO[Has[Connection] with Blocking, SQLException, List[Model]] = PodcastDao.list
 
-  def getPodcastRss(id: PodcastId): RIO[Has[Connection] with Blocking, Elem] =
+  def getPodcastRss(id: PodcastId): RIO[Has[Connection] with Blocking with Config, Elem] =
     for {
+      config   <- config.get
       podcast  <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
       episodes <- EpisodeDao.listByPodcast(id)
-    } yield RssFormat.encode(rss.Podcast.fromDB(podcast, episodes))
+    } yield RssFormat.encode(rss.Podcast.fromDB(podcast, episodes, config))
 
   def getPodcastCover(id: PodcastId): RIO[Has[Connection] with Blocking, HttpEntity.Default] =
     for {
@@ -59,18 +61,19 @@ object PodcastController {
   def create(
     sourceType: SourceType,
     sources: List[String]
-  ): RIO[SttpClient with Has[Connection] with Blocking, List[Podcast.Model]] =
+  ): RIO[SttpClient with Has[Connection] with Blocking with Config, List[Podcast.Model]] =
     sourceType match {
       case SourceType.YouTube =>
         for {
-          playlists            <- YouTubeClient.listPlaylists(sources, Config.apiKey).runCollect
+          youTubeApiKey        <- config.youTubeApiKey
+          playlists            <- YouTubeClient.listPlaylists(sources, youTubeApiKey).runCollect
           podcasts             <- PodcastDao.createAll(playlists.toList.map(Podcast.fromPlaylist))
           podcastsWithPlaylists = podcasts.zip(playlists)
           _                    <- ZIO.foreach_(podcastsWithPlaylists) { case (podcast, playlist) =>
                                     ZIO.foreach_(playlist.snippet.thumbnails.highestRes) { thumbnail =>
                                       for {
                                         uri                 <- ZIO.fromEither(Uri.parse(thumbnail.url)).catchAll(ZIO.dieMessage(_))
-                                        req                  = basicRequest.get(uri).response(asPath(Config.coversPath.resolve(s"${podcast.id}.jpg")))
+                                        req                  = basicRequest.get(uri).response(asPath(StaticConfig.coversPath.resolve(s"${podcast.id}.jpg")))
                                         downloadedThumbnail <- SttpClient.send(req)
                                         _                   <- ZIO.whenCase(downloadedThumbnail.body) { case Right(_) =>
                                                                  PodcastDao.updateImage(podcast.id, Some(s"${podcast.id}.jpg"))
@@ -94,7 +97,7 @@ object PodcastController {
 
   def checkForUpdatesAll(
     downloadQueue: Queue[CreateEpisodeRequest]
-  ): RIO[SttpClient with Has[Connection] with Blocking with Logging, Unit] =
+  ): RIO[SttpClient with Has[Connection] with Blocking with Logging with Config, Unit] =
     for {
       podcasts        <- PodcastDao.list
       externalSources <- EpisodeDao.listExternalSource.map(_.toSet)
@@ -105,7 +108,7 @@ object PodcastController {
 
   def checkForUpdates(
     downloadQueue: Queue[CreateEpisodeRequest]
-  )(id: PodcastId): RIO[SttpClient with Has[Connection] with Blocking with Logging, Unit] =
+  )(id: PodcastId): RIO[SttpClient with Has[Connection] with Blocking with Logging with Config, Unit] =
     for {
       podcast         <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
       externalSources <- EpisodeDao.listExternalSource.map(_.toSet)
@@ -114,7 +117,10 @@ object PodcastController {
 
   private def enqueueDownload(
     downloadQueue: Queue[CreateEpisodeRequest]
-  )(podcast: Podcast.Model, excludeExternalSources: Set[String]): RIO[Logging with SttpClient with Blocking, Unit] =
+  )(
+    podcast: Podcast.Model,
+    excludeExternalSources: Set[String]
+  ): RIO[Logging with SttpClient with Blocking with Config, Unit] =
     podcast.sourceType match {
       case SourceType.YouTube   => enqueueDownloadYouTube(downloadQueue)(podcast, excludeExternalSources)
       case SourceType.Directory => enqueueDownloadFile(downloadQueue)(podcast, excludeExternalSources)
@@ -139,7 +145,7 @@ object PodcastController {
         }
       }
       .foreach { item =>
-        log.trace(s"Putting '${item}' in download queue") *>
+        log.trace(s"Putting '$item' in download queue") *>
           downloadQueue.offer(CreateEpisodeRequest.File(podcast.id, item))
       }
       .tap(_ => log.info(s"Done checking for new episode files for Podcast ${podcast.id}"))
@@ -147,15 +153,20 @@ object PodcastController {
 
   private def enqueueDownloadYouTube(
     downloadQueue: Queue[CreateEpisodeRequest]
-  )(podcast: Podcast.Model, excludeExternalSources: Set[String]): RIO[Logging with SttpClient with Blocking, Unit] =
-    // TODO: Update lastCheckDate here. Will definitely need it for the cron schedule feature.
-    YouTubeClient
-      .listPlaylistItems(podcast.externalSource, Config.apiKey)
-      .filterNot(item => excludeExternalSources.contains(item.snippet.resourceId.videoId))
-      .foreach { item =>
-        log.trace(s"Putting '${item.snippet.title}' (${item.snippet.resourceId.videoId}) in download queue") *>
-          downloadQueue.offer(CreateEpisodeRequest.YouTube(podcast.id, item))
-      }
-      .tap(_ => log.info(s"Done checking for new YouTube episodes for Podcast ${podcast.id}"))
+  )(
+    podcast: Podcast.Model,
+    excludeExternalSources: Set[String]
+  ): RIO[Logging with SttpClient with Blocking with Config, Unit] = for {
+    youTubeApiKey <- config.youTubeApiKey
+    result        <- // TODO: Update lastCheckDate here. Will definitely need it for the cron schedule feature.
+      YouTubeClient
+        .listPlaylistItems(podcast.externalSource, youTubeApiKey)
+        .filterNot(item => excludeExternalSources.contains(item.snippet.resourceId.videoId))
+        .foreach { item =>
+          log.trace(s"Putting '${item.snippet.title}' (${item.snippet.resourceId.videoId}) in download queue") *>
+            downloadQueue.offer(CreateEpisodeRequest.YouTube(podcast.id, item))
+        }
+        .tap(_ => log.info(s"Done checking for new YouTube episodes for Podcast ${podcast.id}"))
+  } yield result
 
 }

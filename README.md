@@ -4,7 +4,7 @@
 
 ## What is it?
 
-Podpodge is a server + client for converting YouTube playlists (or plain audio files) into audio-only RSS feeds that podcast apps can consume.
+Podpodge is a server + client for converting YouTube playlists (or plain audio files in a directory) into audio-only RSS feeds that podcast apps can consume.
 
 Podpodge is written using [akka-http](https://doc.akka.io/docs/akka-http/current/index.html) + [tapir](https://tapir.softwaremill.com) + [ZIO](https://zio.dev) + [Quill](https://getquill.io/). It's still a work in progress in the sense that it doesn't
 have the nicest front-end yet (a Scala.js + [Slinky](https://slinky.dev/) front-end will be coming). Though it does have built-in Swagger integration so that you don't have to construct the API requests yourself for interacting with the DB and getting the RSS feed.
@@ -14,6 +14,8 @@ have the nicest front-end yet (a Scala.js + [Slinky](https://slinky.dev/) front-
 - You need to obtain a [YouTube API Key](https://developers.google.com/youtube/registering_an_application) and set
 the `PODPODGE_YOUTUBE_API_KEY` environment variable.
 - [youtube-dl](https://github.com/ytdl-org/youtube-dl/blob/master/README.md) must be installed (there's an [open issue](https://github.com/reibitto/podpodge/issues/6) for automatically downloading it)
+
+_* The above are only requirements if `sourceType` is `youTube`. For `directory` you can ignore this._
 
 ## Usage
 

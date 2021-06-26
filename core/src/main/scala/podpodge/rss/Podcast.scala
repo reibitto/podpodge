@@ -1,6 +1,7 @@
 package podpodge.rss
 
-import podpodge.{ db, Config }
+import podpodge.config.PodpodgeConfig
+import podpodge.db
 import sttp.model.Uri
 
 import java.time.OffsetDateTime
@@ -21,7 +22,7 @@ final case class Podcast(
 )
 
 object Podcast {
-  def fromDB(podcast: db.Podcast.Model, episodes: List[db.Episode.Model]): Podcast =
+  def fromDB(podcast: db.Podcast.Model, episodes: List[db.Episode.Model], config: PodpodgeConfig): Podcast =
     Podcast(
       podcast.title,
       podcast.linkUrl,
@@ -33,16 +34,16 @@ object Podcast {
       podcast.author,
       podcast.subtitle,
       podcast.summary,
-      Config.baseUri.withPath("cover", podcast.id.unwrap.toString),
+      config.baseUri.withPath("cover", podcast.id.unwrap.toString),
       episodes.map { episode =>
         Episode(
-          Config.baseUri.withPath("episode", episode.id.unwrap.toString, "file"),
+          config.baseUri.withPath("episode", episode.id.unwrap.toString, "file"),
           episode.externalSource,
           episode.linkUrl(podcast.sourceType),
           episode.title,
           episode.publishDate,
           episode.duration,
-          Config.baseUri.withPath("thumbnail", episode.id.unwrap.toString)
+          config.baseUri.withPath("thumbnail", episode.id.unwrap.toString)
         )
       }
     )
