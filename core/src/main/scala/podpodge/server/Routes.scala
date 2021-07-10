@@ -1,31 +1,23 @@
 package podpodge.server
 
-import java.io.File
 import akka.http.scaladsl.server.Route
 import podpodge.CreateEpisodeRequest
 import podpodge.controllers.{ ConfigurationController, PodcastController }
-import podpodge.db.{ Configuration, Podcast }
 import podpodge.db.Podcast.Model
 import podpodge.db.dao.ConfigurationDao
 import podpodge.db.patch.PatchConfiguration
+import podpodge.db.{ Configuration, Podcast }
 import podpodge.http.ApiError
-import podpodge.types.{
-  EpisodeId,
-  PodcastId,
-  ServerHost,
-  ServerPort,
-  ServerScheme,
-  SourceType,
-  Tristate,
-  YouTubeApiKey
-}
+import podpodge.types._
 import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.codec.enumeratum.TapirCodecEnumeratum
+import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
 import sttp.tapir.swagger.akkahttp.SwaggerAkka
 import zio.{ Promise, Queue, RefM }
 
+import java.io.File
 import scala.xml.Elem
 
 object Routes extends TapirSupport with TapirCodecEnumeratum {
@@ -122,19 +114,25 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
   }
 
   def openApiDocs: String = {
-    import sttp.tapir.docs.openapi._
+    import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
     import sttp.tapir.openapi.circe.yaml._
 
-    List(
-      listPodcastsEndpoint,
-      getPodcastEndpoint,
-      rssEndpoint,
-      checkForUpdatesAllEndpoint,
-      checkForUpdatesEndpoint,
-      createPodcastEndpoint,
-      getConfigEndpoint,
-      updateConfigEndpoint
-    ).toOpenAPI("Podpodge Docs", "0.1.0").toYaml
+    OpenAPIDocsInterpreter()
+      .toOpenAPI(
+        Seq(
+          listPodcastsEndpoint,
+          getPodcastEndpoint,
+          rssEndpoint,
+          checkForUpdatesAllEndpoint,
+          checkForUpdatesEndpoint,
+          createPodcastEndpoint,
+          getConfigEndpoint,
+          updateConfigEndpoint
+        ),
+        "Podpodge Docs",
+        "0.1.0"
+      )
+      .toYaml
   }
 
 }

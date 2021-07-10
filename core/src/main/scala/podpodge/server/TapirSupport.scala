@@ -7,9 +7,10 @@ import podpodge.{ Env, PodpodgeRuntime }
 import sttp.capabilities.akka.AkkaStreams
 import sttp.model.StatusCode
 import sttp.tapir.Codec.PlainCodec
+import sttp.tapir.generic.auto.schemaForCaseClass
 import sttp.tapir.json.circe.jsonBody
-import sttp.tapir.server.akkahttp.{ AkkaHttpServerOptions, RichAkkaHttpEndpoint }
-import sttp.tapir.{ oneOf, statusMapping, Codec, CodecFormat, Endpoint, Schema, SchemaType, Validator }
+import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
+import sttp.tapir.{ oneOf, oneOfMapping, Codec, CodecFormat, Endpoint, EndpointOutput, Schema, SchemaType, Validator }
 import zio.logging.log
 import zio.prelude._
 import zio.{ UIO, ZIO }
@@ -17,7 +18,7 @@ import zio.{ UIO, ZIO }
 import scala.xml.{ Elem, XML }
 
 trait TapirSupport {
-  implicit def stringNewtypeSchema[T <: RichNewtype[String]#Type]: Schema[T] = Schema(SchemaType.SString)
+  implicit def stringNewtypeSchema[T <: RichNewtype[String]#Type]: Schema[T] = Schema(SchemaType.SString())
 
   implicit def stringNewtypeValidator[T <: RichNewtype[String]#Type]: Validator[T] = Validator.pass
 
@@ -26,7 +27,7 @@ trait TapirSupport {
   ): Codec[String, T, CodecFormat.TextPlain] =
     Codec.string.map(RichNewtype.wrap(_))(RichNewtype.unwrap(_))
 
-  implicit def intSmartSchema[T <: RichNewtypeSmart[Int]#Type]: Schema[T] = Schema(SchemaType.SInteger)
+  implicit def intSmartSchema[T <: RichNewtypeSmart[Int]#Type]: Schema[T] = Schema(SchemaType.SInteger())
 
   implicit def intSmartValidator[T <: RichNewtypeSmart[Int]#Type]: Validator[T] =
     // TODO: Finish this validator
@@ -37,7 +38,7 @@ trait TapirSupport {
   ): Codec[String, T, CodecFormat.TextPlain] =
     Codec.int.map(RichNewtypeSmart.wrap(_))(RichNewtypeSmart.unwrap(_))
 
-  implicit def longNewtypeSchema[T <: RichNewtype[Long]#Type]: Schema[T] = Schema(SchemaType.SInteger)
+  implicit def longNewtypeSchema[T <: RichNewtype[Long]#Type]: Schema[T] = Schema(SchemaType.SInteger())
 
   implicit def longNewtypeValidator[T <: RichNewtype[Long]#Type](implicit
     equiv: Equivalence[Long, T]
@@ -52,11 +53,11 @@ trait TapirSupport {
   implicit val xmlCodec: Codec[String, Elem, CodecFormat.Xml] =
     implicitly[PlainCodec[String]].map(XML.loadString(_))(_.toString).format(CodecFormat.Xml())
 
-  implicit class RichZIOAkkaHttpEndpoint[I, O](endpoint: Endpoint[I, ApiError, O, AkkaStreams])(implicit
-    serverOptions: AkkaHttpServerOptions
-  ) {
+  private val interpreter: AkkaHttpServerInterpreter = AkkaHttpServerInterpreter()
+
+  implicit class RichZIOAkkaHttpEndpoint[I, O](endpoint: Endpoint[I, ApiError, O, AkkaStreams]) {
     def toZRoute(logic: I => ZIO[Env, Throwable, O]): Route =
-      endpoint.toRoute { in =>
+      interpreter.toRoute(endpoint) { in =>
         PodpodgeRuntime.unsafeRunToFuture {
           logic(in).absorb
             .foldM(
@@ -72,9 +73,9 @@ trait TapirSupport {
       }
   }
 
-  val apiError = oneOf[ApiError](
-    statusMapping(StatusCode.NotFound, jsonBody[ApiError.NotFound]),
-    statusMapping(StatusCode.BadRequest, jsonBody[ApiError.BadRequest]),
-    statusMapping(StatusCode.InternalServerError, jsonBody[ApiError.InternalError])
+  val apiError: EndpointOutput.OneOf[ApiError, ApiError] = oneOf[ApiError](
+    oneOfMapping(StatusCode.NotFound, jsonBody[ApiError.NotFound]),
+    oneOfMapping(StatusCode.BadRequest, jsonBody[ApiError.BadRequest]),
+    oneOfMapping(StatusCode.InternalServerError, jsonBody[ApiError.InternalError])
   )
 }
