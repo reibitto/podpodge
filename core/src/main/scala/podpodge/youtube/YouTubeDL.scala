@@ -23,6 +23,9 @@ object YouTubeDL {
     } else {
       for {
         workingDirectory <- Task(Files.createDirectories(podcastAudioDirectory))
+        // Pass a URL to youtube-dl instead of just the videoId because YouTube's IDs can start with a hyphen which
+        // confuses youtube-dl into thinking it's a command-line option.
+        videoUrl          = s"https://www.youtube.com/watch?v=$videoId"
         // VBR can cause slowness with seeks in podcast apps, so we use a constant bitrate instead.
         _                <- Command(
                               "youtube-dl",
@@ -34,7 +37,7 @@ object YouTubeDL {
                               "128K",
                               "--output",
                               outputFile.getName,
-                              videoId
+                              videoUrl
                             ).workingDirectory(workingDirectory.toFile).inheritIO.successfulExitCode
       } yield outputFile
     }
