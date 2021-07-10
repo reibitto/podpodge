@@ -1,21 +1,24 @@
 package podpodge.controllers
 
-import java.io.File
-import java.nio.file.Paths
-import akka.http.scaladsl.model.{ HttpEntity, MediaType, MediaTypes, StatusCodes }
+import akka.http.scaladsl.model.{ HttpEntity, MediaType, StatusCodes }
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
-import akka.stream.scaladsl.{ FileIO, StreamConverters }
+import akka.stream.IOResult
+import akka.stream.scaladsl.{ FileIO, Source, StreamConverters }
+import akka.util.ByteString
 import podpodge.StaticConfig
 import podpodge.db.Episode
 import podpodge.db.dao.{ EpisodeDao, PodcastDao }
 import podpodge.http.HttpError
 import podpodge.types._
 import podpodge.youtube.YouTubeDL
+import zio._
 import zio.blocking.Blocking
 import zio.logging.{ log, Logging }
-import zio._
 
+import java.io.File
+import java.nio.file.Paths
 import java.sql.Connection
+import scala.concurrent.Future
 
 object EpisodeController {
 
@@ -88,24 +91,18 @@ object EpisodeController {
       FileIO.fromPath(mediaFile.toPath)
     )
 
-  def getThumbnail(id: EpisodeId): RIO[Has[Connection] with Blocking, HttpEntity.Default] =
+  def getThumbnail(id: EpisodeId): RIO[Has[Connection] with Blocking, Source[ByteString, Future[IOResult]]] =
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       result  <- episode.imagePath.map(_.toFile) match {
                    case Some(imageFile) if imageFile.exists() =>
-                     UIO(HttpEntity.Default(MediaTypes.`image/png`, imageFile.length, FileIO.fromPath(imageFile.toPath)))
+                     UIO(FileIO.fromPath(imageFile.toPath))
 
                    case _ =>
                      Option(getClass.getResource("/question.png")).flatMap(ResourceFile.apply) match {
                        case None           => ZIO.fail(HttpError(StatusCodes.InternalServerError))
                        case Some(resource) =>
-                         UIO(
-                           HttpEntity.Default(
-                             MediaTypes.`image/jpeg`,
-                             resource.length,
-                             StreamConverters.fromInputStream(() => resource.url.openStream())
-                           )
-                         )
+                         UIO(StreamConverters.fromInputStream(() => resource.url.openStream()))
                      }
                  }
     } yield result

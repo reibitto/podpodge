@@ -1,9 +1,10 @@
 package podpodge.controllers
 
-import java.nio.file.{ Files, Paths }
-import akka.http.scaladsl.model.{ HttpEntity, MediaTypes, StatusCodes }
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
-import akka.stream.scaladsl.{ FileIO, StreamConverters }
+import akka.stream.IOResult
+import akka.stream.scaladsl.{ FileIO, Source, StreamConverters }
+import akka.util.ByteString
 import podpodge.config.Config
 import podpodge.db.Podcast
 import podpodge.db.Podcast.Model
@@ -20,7 +21,9 @@ import zio.blocking.Blocking
 import zio.logging.{ log, Logging }
 import zio.stream.ZStream
 
+import java.nio.file.{ Files, Paths }
 import java.sql.{ Connection, SQLException }
+import scala.concurrent.Future
 import scala.xml.Elem
 
 object PodcastController {
@@ -36,24 +39,19 @@ object PodcastController {
       episodes <- EpisodeDao.listByPodcast(id)
     } yield RssFormat.encode(rss.Podcast.fromDB(podcast, episodes, config))
 
-  def getPodcastCover(id: PodcastId): RIO[Has[Connection] with Blocking, HttpEntity.Default] =
+  def getPodcastCover(
+    id: PodcastId
+  ): ZIO[Has[Connection] with Blocking, Exception, Source[ByteString, Future[IOResult]]] =
     for {
       podcast <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       result  <- podcast.imagePath.map(_.toFile) match {
                    case Some(imageFile) if imageFile.exists() =>
-                     UIO(HttpEntity.Default(MediaTypes.`image/png`, imageFile.length, FileIO.fromPath(imageFile.toPath)))
+                     UIO(FileIO.fromPath(imageFile.toPath))
 
                    case _ =>
                      Option(getClass.getResource("/question.png")).flatMap(ResourceFile.apply) match {
                        case None           => ZIO.fail(HttpError(StatusCodes.InternalServerError))
-                       case Some(resource) =>
-                         UIO(
-                           HttpEntity.Default(
-                             MediaTypes.`image/jpeg`,
-                             resource.length,
-                             StreamConverters.fromInputStream(() => resource.url.openStream())
-                           )
-                         )
+                       case Some(resource) => UIO(StreamConverters.fromInputStream(() => resource.url.openStream()))
                      }
                  }
     } yield result

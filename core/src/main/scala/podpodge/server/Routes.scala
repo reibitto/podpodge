@@ -1,15 +1,18 @@
 package podpodge.server
 
 import akka.http.scaladsl.server.Route
+import akka.stream.scaladsl.Source
+import akka.util.ByteString
 import podpodge.CreateEpisodeRequest
-import podpodge.controllers.{ ConfigurationController, PodcastController }
+import podpodge.controllers.{ ConfigurationController, EpisodeController, PodcastController }
 import podpodge.db.Podcast.Model
 import podpodge.db.dao.ConfigurationDao
 import podpodge.db.patch.PatchConfiguration
 import podpodge.db.{ Configuration, Podcast }
 import podpodge.http.ApiError
 import podpodge.types._
-import sttp.model.StatusCode
+import sttp.capabilities.akka.AkkaStreams
+import sttp.model.{ Header, MediaType, StatusCode }
 import sttp.tapir._
 import sttp.tapir.codec.enumeratum.TapirCodecEnumeratum
 import sttp.tapir.generic.auto._
@@ -90,6 +93,20 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
         "Updates Podpodge configuration. Pass `null` to clear out a field. If you want a field to remain unchanged, simply leave the field out from the JSON body completely."
       )
 
+  val coverEndpoint: Endpoint[PodcastId, ApiError, Source[ByteString, Any], AkkaStreams] =
+    endpoint.get
+      .in("cover" / path[PodcastId]("podcastId"))
+      .errorOut(apiError)
+      .out(streamBinaryBody(AkkaStreams))
+      .out(header(Header.contentType(MediaType.ImageJpeg)))
+
+  val thumbnailEndpoint: Endpoint[EpisodeId, ApiError, Source[ByteString, Any], AkkaStreams] =
+    endpoint.get
+      .in("thumbnail" / path[EpisodeId]("episodeId"))
+      .errorOut(apiError)
+      .out(streamBinaryBody(AkkaStreams))
+      .out(header(Header.contentType(MediaType.ImageJpeg)))
+
   def make(
     downloadQueue: Queue[CreateEpisodeRequest],
     episodesDownloading: RefM[Map[EpisodeId, Promise[Throwable, File]]]
@@ -109,6 +126,8 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
           result               <- ConfigurationController.patch(defaultConfiguration.id, patch)
         } yield result
       }) ~
+      coverEndpoint.toZRoute(PodcastController.getPodcastCover) ~
+      thumbnailEndpoint.toZRoute(EpisodeController.getThumbnail) ~
       RawRoutes.all(episodesDownloading) ~
       new SwaggerAkka(openApiDocs).routes
   }
