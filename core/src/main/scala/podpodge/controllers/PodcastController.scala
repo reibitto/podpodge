@@ -27,12 +27,12 @@ import scala.concurrent.Future
 import scala.xml.Elem
 
 object PodcastController {
-  def getPodcast(id: PodcastId): RIO[Has[Connection] with Blocking, Model] =
+  def getPodcast(id: PodcastId): RIO[Has[Connection], Model] =
     PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
 
-  def listPodcasts: ZIO[Has[Connection] with Blocking, SQLException, List[Model]] = PodcastDao.list
+  def listPodcasts: ZIO[Has[Connection], SQLException, List[Model]] = PodcastDao.list
 
-  def getPodcastRss(id: PodcastId): RIO[Has[Connection] with Blocking with Config, Elem] =
+  def getPodcastRss(id: PodcastId): RIO[Has[Connection] with Config, Elem] =
     for {
       config   <- config.get
       podcast  <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
@@ -41,7 +41,7 @@ object PodcastController {
 
   def getPodcastCover(
     id: PodcastId
-  ): ZIO[Has[Connection] with Blocking, Exception, Source[ByteString, Future[IOResult]]] =
+  ): ZIO[Has[Connection], Exception, Source[ByteString, Future[IOResult]]] =
     for {
       podcast <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       result  <- podcast.imagePath.map(_.toFile) match {

@@ -4,7 +4,6 @@ import podpodge.db.dao.ConfigurationDao
 import podpodge.types._
 import sttp.model.Uri
 import zio._
-import zio.blocking.Blocking
 import zio.config.ReadError
 import zio.system.System
 
@@ -14,7 +13,7 @@ package object config {
   type Config = Has[PodpodgeConfig]
 
   object Config {
-    def live: ZLayer[Has[Connection] with Blocking with System, ReadError[String], Has[PodpodgeConfig]] = {
+    def live: ZLayer[Has[Connection] with System, ReadError[String], Has[PodpodgeConfig]] = {
       import zio.config.ConfigDescriptor._
       import zio.config._
 

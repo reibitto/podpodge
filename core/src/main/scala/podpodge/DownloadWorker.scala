@@ -73,7 +73,7 @@ object DownloadWorker {
 
   def createEpisodeFile(
     request: CreateEpisodeRequest.File
-  ): ZIO[SttpClient with Has[Connection] with Blocking, Throwable, Unit] =
+  ): ZIO[SttpClient with Has[Connection], Throwable, Unit] =
     for {
       _ <- EpisodeDao.create(
              Episode(

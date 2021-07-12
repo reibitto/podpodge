@@ -22,7 +22,7 @@ import scala.concurrent.Future
 
 object EpisodeController {
 
-  def getEpisodeFile(id: EpisodeId): RIO[Has[Connection] with Blocking, HttpEntity.Default] =
+  def getEpisodeFile(id: EpisodeId): RIO[Has[Connection], HttpEntity.Default] =
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       file    <-
@@ -91,7 +91,7 @@ object EpisodeController {
       FileIO.fromPath(mediaFile.toPath)
     )
 
-  def getThumbnail(id: EpisodeId): RIO[Has[Connection] with Blocking, Source[ByteString, Future[IOResult]]] =
+  def getThumbnail(id: EpisodeId): RIO[Has[Connection], Source[ByteString, Future[IOResult]]] =
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       result  <- episode.imagePath.map(_.toFile) match {
