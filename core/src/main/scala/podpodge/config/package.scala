@@ -39,7 +39,7 @@ package object config {
                             )
                           )
         fromDb         <-
-          ConfigurationDao.getPrimary.bimap(
+          ConfigurationDao.getPrimary.mapBoth(
             t => ReadError.SourceError(s"Error reading config from database: ${t.getMessage}"),
             c =>
               (
