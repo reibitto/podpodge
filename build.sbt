@@ -63,7 +63,7 @@ lazy val core = module("podpodge", Some("core"))
       "io.getquill"                  %% "quill-jdbc"                 % Version.quill,
       "io.getquill"                  %% "quill-jdbc-zio"             % Version.quill,
       "org.xerial"                    % "sqlite-jdbc"                % "3.36.0.1",
-      "org.flywaydb"                  % "flyway-core"                % "7.12.1",
+      "org.flywaydb"                  % "flyway-core"                % "7.14.0",
       "org.slf4j"                     % "slf4j-nop"                  % "1.7.32"
     )
   )
