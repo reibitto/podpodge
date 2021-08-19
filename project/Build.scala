@@ -40,10 +40,10 @@ object Build {
     "-Ywarn-extra-implicit"          // Warn when more than one implicit parameter section is defined.
   ) ++
     Seq(
-      "-Ywarn-unused:imports",       // Warn if an import selector is not referenced.
-      "-Ywarn-unused:locals",        // Warn if a local definition is unused.
-      "-Ywarn-unused:privates",      // Warn if a private member is unused.
-      "-Ywarn-unused:implicits"      // Warn if an implicit parameter is unused.
+      "-Ywarn-unused:imports",  // Warn if an import selector is not referenced.
+      "-Ywarn-unused:locals",   // Warn if a local definition is unused.
+      "-Ywarn-unused:privates", // Warn if a private member is unused.
+      "-Ywarn-unused:implicits" // Warn if an implicit parameter is unused.
     ).filter(_ => shouldWarnForUnusedCode) ++
     Seq(
       "-opt:l:inline",
@@ -52,17 +52,17 @@ object Build {
 
   def defaultSettings(projectName: String) =
     Seq(
-      name := projectName,
+      name                     := projectName,
       Test / javaOptions += "-Duser.timezone=UTC",
-      scalacOptions := ScalacOptions,
+      scalacOptions            := ScalacOptions,
       ThisBuild / scalaVersion := ScalaVersion,
       libraryDependencies ++= Plugins.BaseCompilerPlugins,
       incOptions ~= (_.withLogRecompileOnMacro(false)),
-      autoAPIMappings := true,
-      resolvers := Resolvers,
-      testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-      Test / fork := true,
-      Test / logBuffered := false
+      autoAPIMappings          := true,
+      resolvers                := Resolvers,
+      testFrameworks           := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+      Test / fork              := true,
+      Test / logBuffered       := false
     )
 
   lazy val Resolvers = Seq(
