@@ -16,7 +16,7 @@ object YouTubeDL {
     // will have to be updated as well since "mp3" is hardcoded there.
     val audioFormat           = "mp3"
     val podcastAudioDirectory = StaticConfig.audioPath.resolve(podcastId.unwrap.toString)
-    val outputFile            = podcastAudioDirectory.resolve(s"${videoId}.${audioFormat}").toFile
+    val outputFile            = podcastAudioDirectory.resolve(s"$videoId.$audioFormat").toFile
 
     if (outputFile.exists) {
       log.info(s"${outputFile.getName} already exists. Skipping download.").as(outputFile)

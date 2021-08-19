@@ -7,11 +7,11 @@ lazy val root = project
   .in(file("."))
   .aggregate(core)
   .settings(
-    name := "podpodge",
+    name        := "podpodge",
     addCommandAlias("run", "podpodge/run"),
     addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll"),
     addCommandAlias("fmtCheck", "all root/scalafmtSbtCheck root/scalafmtCheckAll"),
-    logo :=
+    logo        :=
       s"""
          |    ____            __                __
          |   / __ \\____  ____/ /___  ____  ____/ /___ ____
@@ -31,8 +31,8 @@ lazy val root = project
 
 lazy val core = module("podpodge", Some("core"))
   .settings(
-    fork := true,
-    run / baseDirectory := file("."),
+    fork                    := true,
+    run / baseDirectory     := file("."),
     reStart / baseDirectory := file("."),
     libraryDependencies ++= Seq(
       "dev.zio"                      %% "zio"                        % Version.zio,
