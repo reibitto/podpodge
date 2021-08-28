@@ -41,7 +41,7 @@ lazy val core = module("podpodge", Some("core"))
       "dev.zio"                      %% "zio-config"                 % "1.0.6",
       "dev.zio"                      %% "zio-logging"                % "0.5.11",
       "dev.zio"                      %% "zio-prelude"                % "1.0.0-RC6",
-      "io.github.kitlangton"         %% "zio-magic"                  % "0.3.7",
+      "io.github.kitlangton"         %% "zio-magic"                  % "0.3.8",
       "org.scala-lang.modules"       %% "scala-xml"                  % "2.0.1",
       "com.beachape"                 %% "enumeratum"                 % Version.enumeratum,
       "com.beachape"                 %% "enumeratum-circe"           % Version.enumeratum,
@@ -49,8 +49,8 @@ lazy val core = module("podpodge", Some("core"))
       "io.circe"                     %% "circe-parser"               % Version.circe,
       "io.circe"                     %% "circe-generic"              % Version.circe,
       "com.typesafe.akka"            %% "akka-http"                  % "10.2.6",
-      "com.typesafe.akka"            %% "akka-actor-typed"           % "2.6.15",
-      "com.typesafe.akka"            %% "akka-stream"                % "2.6.15",
+      "com.typesafe.akka"            %% "akka-actor-typed"           % "2.6.16",
+      "com.typesafe.akka"            %% "akka-stream"                % "2.6.16",
       "com.softwaremill.sttp.client" %% "core"                       % Version.sttp,
       "com.softwaremill.sttp.client" %% "circe"                      % Version.sttp,
       "com.softwaremill.sttp.client" %% "httpclient-backend-zio"     % Version.sttp,
@@ -62,7 +62,7 @@ lazy val core = module("podpodge", Some("core"))
       "com.softwaremill.sttp.tapir"  %% "tapir-swagger-ui-akka-http" % Version.tapir,
       "io.getquill"                  %% "quill-jdbc"                 % Version.quill,
       "io.getquill"                  %% "quill-jdbc-zio"             % Version.quill,
-      "org.xerial"                    % "sqlite-jdbc"                % "3.36.0.1",
+      "org.xerial"                    % "sqlite-jdbc"                % "3.36.0.2",
       "org.flywaydb"                  % "flyway-core"                % "7.14.0",
       "org.slf4j"                     % "slf4j-nop"                  % "1.7.32"
     )
