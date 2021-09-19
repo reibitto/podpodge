@@ -27,15 +27,17 @@ package object config {
         (stringNew(YouTubeApiKey)(YouTubeApiKey.configKey).optional |@|
           stringNew(ServerHost)(ServerHost.configKey) |@|
           intSmart(ServerPort)(ServerPort.configKey) |@|
-          stringNew(ServerScheme)(ServerScheme.configKey))(PodpodgeConfig.apply, PodpodgeConfig.unapply)
+          stringNew(ServerScheme)(ServerScheme.configKey) |@|
+          stringNew(DownloaderPath)(DownloaderPath.configKey))(PodpodgeConfig.apply, PodpodgeConfig.unapply)
 
       (for {
         envSource      <- ConfigSource.fromSystemEnv
         defaultSource   = ConfigSource.fromMap(
                             Map(
-                              ServerHost.configKey   -> "localhost",
-                              ServerPort.configKey   -> "8080",
-                              ServerScheme.configKey -> "http"
+                              ServerHost.configKey     -> "localhost",
+                              ServerPort.configKey     -> "8080",
+                              ServerScheme.configKey   -> "http",
+                              DownloaderPath.configKey -> "youtube-dl"
                             )
                           )
         fromDb         <-
@@ -59,7 +61,8 @@ package object config {
     youTubeApiKey: Option[YouTubeApiKey],
     serverHost: ServerHost,
     serverPort: ServerPort,
-    serverScheme: ServerScheme
+    serverScheme: ServerScheme,
+    downloaderPath: DownloaderPath
   ) {
     val baseUri: Uri = Uri(serverScheme.unwrap, serverHost.unwrap, serverPort.unwrap)
   }

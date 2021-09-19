@@ -80,4 +80,9 @@ package object types {
   }
   type ServerScheme = ServerScheme.Type
 
+  object DownloaderPath extends RichNewtype[String] {
+    val configKey: String = "PODPODGE_DOWNLOADER_PATH"
+  }
+  type DownloaderPath = DownloaderPath.Type
+
 }
