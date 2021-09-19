@@ -24,7 +24,8 @@ object ConfigurationDao extends SqlDao {
                            youTubeApiKey = None,
                            serverHost = None,
                            serverPort = None,
-                           serverScheme = None
+                           serverScheme = None,
+                           downloaderPath = None
                          )
                        )
                    }
@@ -63,7 +64,8 @@ object ConfigurationDao extends SqlDao {
                           youTubeApiKey = patch.youTubeApiKey.specify(originalConfig.youTubeApiKey),
                           serverHost = patch.serverHost.specify(originalConfig.serverHost),
                           serverPort = patch.serverPort.specify(originalConfig.serverPort),
-                          serverScheme = patch.serverScheme.specify(originalConfig.serverScheme)
+                          serverScheme = patch.serverScheme.specify(originalConfig.serverScheme),
+                          downloaderPath = patch.downloaderPath.specify(originalConfig.downloaderPath)
                         )
       _              <- update(patchedConfig)
     } yield patchedConfig

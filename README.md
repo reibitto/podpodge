@@ -4,16 +4,20 @@
 
 ## What is it?
 
-Podpodge is a server + client for converting YouTube playlists (or plain audio files in a directory) into audio-only RSS feeds that podcast apps can consume.
+Podpodge is a server + client for converting YouTube playlists (or plain audio files in a directory) into audio-only RSS
+feeds that podcast apps can consume.
 
-Podpodge is written using [akka-http](https://doc.akka.io/docs/akka-http/current/index.html) + [tapir](https://tapir.softwaremill.com) + [ZIO](https://zio.dev) + [Quill](https://getquill.io/). It's still a work in progress in the sense that it doesn't
-have the nicest front-end yet (a Scala.js + [Slinky](https://slinky.dev/) front-end will be coming). Though it does have built-in Swagger integration so that you don't have to construct the API requests yourself for interacting with the DB and getting the RSS feed.
+Podpodge is written using [akka-http](https://doc.akka.io/docs/akka-http/current/index.html) +
+[tapir](https://tapir.softwaremill.com) + [ZIO](https://zio.dev) + [Quill](https://getquill.io/). It's still a work in
+progress in the sense that it doesn't have the nicest front-end yet (a Scala.js + [Slinky](https://slinky.dev/)
+front-end will be coming). Though it does have built-in Swagger integration so that you don't have to construct the API
+requests yourself for interacting with the DB and getting the RSS feed.
 
 ## Requirements
 
 - You need to obtain a [YouTube API Key](https://developers.google.com/youtube/registering_an_application) and set
 the `PODPODGE_YOUTUBE_API_KEY` environment variable.
-- [youtube-dl](https://github.com/ytdl-org/youtube-dl/blob/master/README.md) must be installed (there's an [open issue](https://github.com/reibitto/podpodge/issues/6) for automatically downloading it)
+- [youtube-dl](https://github.com/ytdl-org/youtube-dl) or [yt-dlp](https://github.com/yt-dlp/yt-dlp) must be installed (there's an [open issue](https://github.com/reibitto/podpodge/issues/6) for automatically downloading it)
 
 _* The above are only requirements if `sourceType` is `youTube`. For `directory` you can ignore this._
 
@@ -22,7 +26,8 @@ _* The above are only requirements if `sourceType` is `youTube`. For `directory`
 Run the server either using sbt (`sbt run`) or create an executable jar (`sbt assembly`) and run that. This will run the
 Podpodge server at http://localhost:8080 by default (this can be changed with `PODPODGE_HOST` and `PODPODGE_PORT`). For
 example, you might want to change `PODPODGE_HOST` to your network IP (like 192.168.1.100 or whatever it's set to) so that
-you can access it from your phone on the same local network. Or properly host it on a "real" server if you'd like. 😉 
+you can access it from your phone on the same local network. Of course the other option is to host it on a "proper" public
+server so that you can access it from anywhere.
 
 To register a YouTube playlist as a Podcast, call the `POST /podcast/{sourceType}` route (where `sourceType` can be set
 to `youTube` or `directory`). You can do this with the built-in Swagger integration (which is the default top-level page).

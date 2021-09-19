@@ -83,7 +83,8 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
             Tristate.Some(YouTubeApiKey("YOUR_API_KEY")),
             Tristate.Some(ServerHost("localhost")),
             Tristate.Some(ServerPort.makeUnsafe(80)),
-            Tristate.Some(ServerScheme("http"))
+            Tristate.Some(ServerScheme("http")),
+            Tristate.Some(DownloaderPath("youtube-dl"))
           )
         )
       )

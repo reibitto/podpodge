@@ -7,7 +7,7 @@ import akka.stream.scaladsl.{ FileIO, Source, StreamConverters }
 import akka.util.ByteString
 import podpodge.StaticConfig
 import podpodge.db.Episode
-import podpodge.db.dao.{ EpisodeDao, PodcastDao }
+import podpodge.db.dao.{ ConfigurationDao, EpisodeDao, PodcastDao }
 import podpodge.http.HttpError
 import podpodge.types._
 import podpodge.youtube.YouTubeDL
@@ -66,13 +66,14 @@ object EpisodeController {
     episodesDownloading: RefM[Map[EpisodeId, Promise[Throwable, File]]]
   )(episode: Episode.Model): RIO[Has[Connection] with Blocking with Logging, HttpEntity.Default] =
     for {
+      config     <- ConfigurationDao.getPrimary
       promiseMap <- episodesDownloading.updateAndGet { downloadMap =>
                       downloadMap.get(episode.id) match {
                         case None    =>
                           for {
                             p <- Promise.make[Throwable, File]
                             _ <- YouTubeDL
-                                   .download(episode.podcastId, episode.externalSource)
+                                   .download(episode.podcastId, episode.externalSource, config.downloaderPath)
                                    .onExit { e =>
                                      e.toEither.fold(p.fail, p.succeed) *>
                                        episodesDownloading.updateAndGet(m => UIO(m - episode.id))

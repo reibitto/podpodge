@@ -10,7 +10,8 @@ final case class Configuration[ID](
   youTubeApiKey: Option[YouTubeApiKey],
   serverHost: Option[ServerHost],
   serverPort: Option[ServerPort],
-  serverScheme: Option[ServerScheme]
+  serverScheme: Option[ServerScheme],
+  downloaderPath: Option[DownloaderPath]
 )
 
 object Configuration {
