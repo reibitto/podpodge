@@ -11,7 +11,7 @@ final case class PlaylistItemListResponse(
   pageInfo: PageInfo
 )
 
-object PlaylistItemListResponse {
+object PlaylistItemListResponse                                                                                     {
   implicit val decoder: Decoder[PlaylistItemListResponse] = deriveDecoder[PlaylistItemListResponse]
 }
 

@@ -53,7 +53,7 @@ trait TapirSupport {
   implicit val xmlCodec: Codec[String, Elem, CodecFormat.Xml] =
     implicitly[PlainCodec[String]].map(XML.loadString(_))(_.toString).format(CodecFormat.Xml())
 
-  private val interpreter: AkkaHttpServerInterpreter = AkkaHttpServerInterpreter()
+  private val interpreter: AkkaHttpServerInterpreter          = AkkaHttpServerInterpreter()
 
   implicit class RichZIOAkkaHttpEndpoint[I, O](endpoint: Endpoint[I, ApiError, O, AkkaStreams]) {
     def toZRoute(logic: I => ZIO[Env, Throwable, O]): Route =

@@ -21,8 +21,8 @@ trait PodpodgeRuntime extends Runtime[Env] {
     )
   }
 
-  lazy val environment: Env   = default.environment
-  lazy val platform: Platform = default.platform
+  lazy val environment: Env              = default.environment
+  lazy val platform: Platform            = default.platform
 }
 
 object PodpodgeRuntime extends PodpodgeRuntime

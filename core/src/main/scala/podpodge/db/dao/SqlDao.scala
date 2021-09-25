@@ -16,16 +16,16 @@ object SqlDao {
 }
 
 trait MappedEncodings {
-  implicit val offsetDateTimeEncoder: MappedEncoding[OffsetDateTime, String] =
+  implicit val offsetDateTimeEncoder: MappedEncoding[OffsetDateTime, String]                                        =
     MappedEncoding[OffsetDateTime, String](_.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
 
-  implicit val offsetDateTimeDecoder: MappedEncoding[String, OffsetDateTime] =
+  implicit val offsetDateTimeDecoder: MappedEncoding[String, OffsetDateTime]                                        =
     MappedEncoding[String, OffsetDateTime](s => OffsetDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME))
 
-  implicit val durationEncoder: MappedEncoding[Duration, String] =
+  implicit val durationEncoder: MappedEncoding[Duration, String]                                                    =
     MappedEncoding[Duration, String](_.toString)
 
-  implicit val durationDecoder: MappedEncoding[String, Duration] =
+  implicit val durationDecoder: MappedEncoding[String, Duration]                                                    =
     MappedEncoding[String, Duration](Duration.parse)
 
   implicit def newtypeEncoder[A, T <: RichNewtype[A]#Type](implicit equiv: Equivalence[A, T]): MappedEncoding[T, A] =
@@ -44,9 +44,9 @@ trait MappedEncodings {
   ): MappedEncoding[A, T] =
     MappedEncoding[A, T](RichNewtypeSmart.wrap(_))
 
-  implicit val sourceTypeEncoder: MappedEncoding[SourceType, String] =
+  implicit val sourceTypeEncoder: MappedEncoding[SourceType, String]                                                =
     MappedEncoding[SourceType, String](_.entryName)
 
-  implicit val sourceTypeDecoder: MappedEncoding[String, SourceType] =
+  implicit val sourceTypeDecoder: MappedEncoding[String, SourceType]                                                =
     MappedEncoding[String, SourceType](SourceType.withName)
 }
