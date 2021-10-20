@@ -46,7 +46,7 @@ object EpisodeDao extends SqlDao {
       )
     }.map(ids => episodes.zip(ids).map { case (p, i) => p.copy(id = i) })
 
-  def updateImage(id: EpisodeId, s: Option[String])               =
+  def updateImage(id: EpisodeId, s: Option[String]) =
     ctx.run {
       query[Episode.Model].filter(_.id == lift(id)).update(_.image -> lift(s))
     }

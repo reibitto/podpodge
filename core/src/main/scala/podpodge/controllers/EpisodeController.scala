@@ -69,7 +69,7 @@ object EpisodeController {
       config     <- ConfigurationDao.getPrimary
       promiseMap <- episodesDownloading.updateAndGet { downloadMap =>
                       downloadMap.get(episode.id) match {
-                        case None    =>
+                        case None =>
                           for {
                             p <- Promise.make[Throwable, File]
                             _ <- YouTubeDL
