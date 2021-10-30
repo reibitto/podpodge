@@ -27,7 +27,7 @@ object PodcastDao extends SqlDao {
 
   def createAll(
     podcasts: List[Podcast.Insert]
-  ): ZIO[Has[Connection], SQLException, List[Podcast[PodcastId]]]                             =
+  ): ZIO[Has[Connection], SQLException, List[Podcast[PodcastId]]] =
     ctx.run {
       liftQuery(podcasts.map(_.copy(id = PodcastId(0)))).foreach(e =>
         query[Podcast[PodcastId]].insert(e).returningGenerated(_.id)
