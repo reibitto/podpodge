@@ -41,7 +41,7 @@ lazy val core = module("podpodge", Some("core"))
       "dev.zio"                      %% "zio-config"                 % "1.0.10",
       "dev.zio"                      %% "zio-logging"                % "0.5.13",
       "dev.zio"                      %% "zio-prelude"                % "1.0.0-RC6",
-      "io.github.kitlangton"         %% "zio-magic"                  % "0.3.10",
+      "io.github.kitlangton"         %% "zio-magic"                  % "0.3.11",
       "org.scala-lang.modules"       %% "scala-xml"                  % "2.0.1",
       "com.beachape"                 %% "enumeratum"                 % Version.enumeratum,
       "com.beachape"                 %% "enumeratum-circe"           % Version.enumeratum,
