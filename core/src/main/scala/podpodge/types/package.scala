@@ -18,10 +18,10 @@ package object types {
   }
 
   object RichNewtype {
-    def wrap[FROM, TO <: RichNewtype[FROM]#Type](a: FROM)(implicit equiv: Equivalence[FROM, TO]): TO =
+    def wrap[FROM, TO](a: FROM)(implicit equiv: Equivalence[FROM, TO]): TO =
       implicitly[Equivalence[FROM, TO]].to(a)
 
-    def unwrap[FROM, TO, _ <: RichNewtype[FROM]#Type](a: TO)(implicit equiv: Equivalence[FROM, TO]): FROM =
+    def unwrap[FROM, TO](a: TO)(implicit equiv: Equivalence[FROM, TO]): FROM =
       implicitly[Equivalence[FROM, TO]].from(a)
   }
 
@@ -40,10 +40,10 @@ package object types {
   }
 
   object RichNewtypeSmart {
-    def wrap[FROM, TO <: RichNewtypeSmart[FROM]#Type](a: FROM)(implicit equiv: Equivalence[FROM, TO]): TO =
+    def wrap[FROM, TO](a: FROM)(implicit equiv: Equivalence[FROM, TO]): TO =
       implicitly[Equivalence[FROM, TO]].to(a)
 
-    def unwrap[FROM, TO, _ <: RichNewtypeSmart[FROM]#Type](a: TO)(implicit equiv: Equivalence[FROM, TO]): FROM =
+    def unwrap[FROM, TO](a: TO)(implicit equiv: Equivalence[FROM, TO]): FROM =
       implicitly[Equivalence[FROM, TO]].from(a)
   }
 
