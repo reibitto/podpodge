@@ -3,7 +3,7 @@ import Keys._
 import scala.Console
 
 object Build {
-  val ScalaVersion = "2.13.6"
+  val ScalaVersion = "2.13.7"
 
   val PodpodgeVersion = "0.0.1"
 
@@ -12,8 +12,8 @@ object Build {
     val enumeratum = "1.7.0"
     val quill      = "3.10.0"
     val sttp       = "2.2.10"
-    val tapir      = "0.19.1"
-    val zio        = "1.0.12"
+    val tapir      = "0.18.3"
+    val zio        = "1.0.13"
   }
 
   lazy val ScalacOptions = Seq(
