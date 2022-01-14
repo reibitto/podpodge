@@ -3,7 +3,7 @@ import Keys._
 import scala.Console
 
 object Build {
-  val ScalaVersion = "2.13.7"
+  val ScalaVersion = "2.13.8"
 
   val PodpodgeVersion = "0.0.1"
 
