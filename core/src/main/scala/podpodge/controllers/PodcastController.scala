@@ -137,9 +137,9 @@ object PodcastController {
       .filterNot(item => excludeExternalPaths.contains(item))
       .filter { s =>
         s.extension match {
-          case Some(ext) if Set("mp3", "ogg").contains(ext.toLowerCase) =>
+          case Some(ext) if Set("mp3", "ogg", "m4a").contains(ext.toLowerCase) =>
             true
-          case _                                                        => false
+          case _                                                               => false
         }
       }
       .foreach { item =>

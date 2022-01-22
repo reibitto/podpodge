@@ -27,9 +27,7 @@ final case class Episode[ID](
 
   def linkUrl(sourceType: SourceType): Uri = sourceType match {
     case SourceType.YouTube   => uri"https://www.youtube.com/playlist?list=$externalSource"
-    case SourceType.Directory =>
-      val file = new File(externalSource)
-      Uri.unsafeParse(s"file://${file.getCanonicalPath}")
+    case SourceType.Directory => Uri(new File(externalSource).toURI)
   }
 }
 
