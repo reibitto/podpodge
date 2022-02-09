@@ -37,7 +37,7 @@ lazy val core = module("podpodge", Some("core"))
     libraryDependencies ++= Seq(
       "dev.zio"                      %% "zio"                        % Version.zio,
       "dev.zio"                      %% "zio-streams"                % Version.zio,
-      "dev.zio"                      %% "zio-process"                % "0.6.0",
+      "dev.zio"                      %% "zio-process"                % "0.6.1",
       "dev.zio"                      %% "zio-config"                 % "1.0.10",
       "dev.zio"                      %% "zio-logging"                % "0.5.14",
       "dev.zio"                      %% "zio-prelude"                % "1.0.0-RC6",
@@ -63,8 +63,8 @@ lazy val core = module("podpodge", Some("core"))
       "io.getquill"                  %% "quill-jdbc"                 % Version.quill,
       "io.getquill"                  %% "quill-jdbc-zio"             % Version.quill,
       "org.xerial"                    % "sqlite-jdbc"                % "3.36.0.3",
-      "org.flywaydb"                  % "flyway-core"                % "8.2.3",
-      "org.slf4j"                     % "slf4j-nop"                  % "1.7.33"
+      "org.flywaydb"                  % "flyway-core"                % "8.4.4",
+      "org.slf4j"                     % "slf4j-nop"                  % "1.7.36"
     )
   )
 
