@@ -48,7 +48,7 @@ lazy val core = module("podpodge", Some("core"))
       "io.circe"                     %% "circe-core"                 % Version.circe,
       "io.circe"                     %% "circe-parser"               % Version.circe,
       "io.circe"                     %% "circe-generic"              % Version.circe,
-      "com.typesafe.akka"            %% "akka-http"                  % "10.2.7",
+      "com.typesafe.akka"            %% "akka-http"                  % "10.2.8",
       "com.typesafe.akka"            %% "akka-actor-typed"           % "2.6.18",
       "com.typesafe.akka"            %% "akka-stream"                % "2.6.18",
       "com.softwaremill.sttp.client" %% "core"                       % Version.sttp,
@@ -63,7 +63,7 @@ lazy val core = module("podpodge", Some("core"))
       "io.getquill"                  %% "quill-jdbc"                 % Version.quill,
       "io.getquill"                  %% "quill-jdbc-zio"             % Version.quill,
       "org.xerial"                    % "sqlite-jdbc"                % "3.36.0.3",
-      "org.flywaydb"                  % "flyway-core"                % "8.4.4",
+      "org.flywaydb"                  % "flyway-core"                % "8.5.0",
       "org.slf4j"                     % "slf4j-nop"                  % "1.7.36"
     )
   )
