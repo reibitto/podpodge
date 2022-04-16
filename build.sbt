@@ -41,7 +41,7 @@ lazy val core = module("podpodge", Some("core"))
       "dev.zio"                      %% "zio-config"                 % "1.0.10",
       "dev.zio"                      %% "zio-logging"                % "0.5.14",
       "dev.zio"                      %% "zio-prelude"                % "1.0.0-RC6",
-      "io.github.kitlangton"         %% "zio-magic"                  % "0.3.11",
+      "io.github.kitlangton"         %% "zio-magic"                  % "0.3.12",
       "org.scala-lang.modules"       %% "scala-xml"                  % "2.1.0",
       "com.beachape"                 %% "enumeratum"                 % Version.enumeratum,
       "com.beachape"                 %% "enumeratum-circe"           % Version.enumeratum,
@@ -63,7 +63,7 @@ lazy val core = module("podpodge", Some("core"))
       "io.getquill"                  %% "quill-jdbc"                 % Version.quill,
       "io.getquill"                  %% "quill-jdbc-zio"             % Version.quill,
       "org.xerial"                    % "sqlite-jdbc"                % "3.36.0.3",
-      "org.flywaydb"                  % "flyway-core"                % "8.5.6",
+      "org.flywaydb"                  % "flyway-core"                % "8.5.8",
       "org.slf4j"                     % "slf4j-nop"                  % "1.7.36"
     )
   )
