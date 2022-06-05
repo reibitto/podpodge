@@ -8,7 +8,7 @@ object Build {
   val PodpodgeVersion = "0.0.1"
 
   object Version {
-    val circe      = "0.14.1"
+    val circe      = "0.14.2"
     val enumeratum = "1.7.0"
     val quill      = "3.10.0"
     val sttp       = "2.3.0"
