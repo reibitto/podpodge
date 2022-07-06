@@ -13,7 +13,7 @@ object Build {
     val quill      = "3.10.0"
     val sttp       = "2.3.0"
     val tapir      = "0.18.3"
-    val zio        = "1.0.14"
+    val zio        = "1.0.15"
   }
 
   lazy val ScalacOptions = Seq(
