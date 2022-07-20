@@ -17,49 +17,49 @@ import sttp.tapir._
 import sttp.tapir.codec.enumeratum.TapirCodecEnumeratum
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
-import sttp.tapir.swagger.akkahttp.SwaggerAkka
-import zio.{ Promise, Queue, RefM }
+//import sttp.tapir.swagger.akkahttp.SwaggerAkka
+import zio.{ Promise, Queue, Ref }
 
 import java.io.File
 import scala.xml.Elem
 
 object Routes extends TapirSupport with TapirCodecEnumeratum {
-  val listPodcastsEndpoint: Endpoint[Unit, ApiError, List[Podcast.Model], Any] =
+  val listPodcastsEndpoint: Endpoint[Unit, Unit, ApiError, List[Model], Any] =
     endpoint
       .in("podcasts")
       .errorOut(apiError)
       .out(jsonBody[List[Podcast.Model]])
       .description("List all the podcasts currently registered.")
 
-  val getPodcastEndpoint: Endpoint[PodcastId, ApiError, Podcast.Model, Any] =
+  val getPodcastEndpoint =
     endpoint
       .in("podcast" / path[PodcastId]("podcastId"))
       .errorOut(apiError)
       .out(jsonBody[Podcast.Model])
       .description("Get a single podcast by its ID.")
 
-  val rssEndpoint: Endpoint[PodcastId, ApiError, Elem, Any] =
+  val rssEndpoint =
     endpoint.get
       .in("podcast" / path[PodcastId]("podcastId") / "rss")
       .errorOut(apiError)
       .out(xmlBody[Elem])
       .description("Get the RSS feed for the specified podcast.")
 
-  val checkForUpdatesAllEndpoint: Endpoint[Unit, ApiError, Unit, Any] =
+  val checkForUpdatesAllEndpoint =
     endpoint.post
       .in("podcasts" / "check")
       .errorOut(apiError)
       .out(statusCode(StatusCode.Ok))
       .description("Checks for new episodes for all registered podcasts.")
 
-  val checkForUpdatesEndpoint: Endpoint[PodcastId, ApiError, Unit, Any] =
+  val checkForUpdatesEndpoint =
     endpoint.post
       .in("podcast" / path[PodcastId]("podcastId") / "check")
       .errorOut(apiError)
       .out(statusCode(StatusCode.Ok))
       .description("Checks for new episodes for the specified podcast.")
 
-  val createPodcastEndpoint: Endpoint[(SourceType, List[String]), ApiError, List[Model], Any] =
+  val createPodcastEndpoint =
     endpoint.post
       .in("podcast" / path[SourceType]("sourceType"))
       .in(query[List[String]]("playlistId"))
@@ -67,14 +67,14 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
       .out(jsonBody[List[Podcast.Model]])
       .description("Creates Podcast feeds for the specified YouTube playlist IDs.")
 
-  val getConfigEndpoint: Endpoint[Unit, ApiError, Configuration.Model, Any] =
+  val getConfigEndpoint =
     endpoint.get
       .in("configuration")
       .errorOut(apiError)
       .out(jsonBody[Configuration.Model])
       .description("Get Podpodge configuration")
 
-  val updateConfigEndpoint: Endpoint[PatchConfiguration, ApiError, Configuration.Model, Any] =
+  val updateConfigEndpoint =
     endpoint.patch
       .in("configuration")
       .in(
@@ -94,23 +94,23 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
         "Updates Podpodge configuration. Pass `null` to clear out a field. If you want a field to remain unchanged, simply leave the field out from the JSON body completely."
       )
 
-  val coverEndpoint: Endpoint[PodcastId, ApiError, Source[ByteString, Any], AkkaStreams] =
-    endpoint.get
-      .in("cover" / path[PodcastId]("podcastId"))
-      .errorOut(apiError)
-      .out(streamBinaryBody(AkkaStreams))
-      .out(header(Header.contentType(MediaType.ImageJpeg)))
-
-  val thumbnailEndpoint: Endpoint[EpisodeId, ApiError, Source[ByteString, Any], AkkaStreams] =
-    endpoint.get
-      .in("thumbnail" / path[EpisodeId]("episodeId"))
-      .errorOut(apiError)
-      .out(streamBinaryBody(AkkaStreams))
-      .out(header(Header.contentType(MediaType.ImageJpeg)))
+//  val coverEndpoint =
+//    endpoint.get
+//      .in("cover" / path[PodcastId]("podcastId"))
+//      .errorOut(apiError)
+//      .out(streamBinaryBody(AkkaStreams)(Schema.binary))
+//      .out(header(Header.contentType(MediaType.ImageJpeg)))
+//
+//  val thumbnailEndpoint =
+//    endpoint.get
+//      .in("thumbnail" / path[EpisodeId]("episodeId"))
+//      .errorOut(apiError)
+//      .out(streamBinaryBody(AkkaStreams))
+//      .out(header(Header.contentType(MediaType.ImageJpeg)))
 
   def make(
     downloadQueue: Queue[CreateEpisodeRequest],
-    episodesDownloading: RefM[Map[EpisodeId, Promise[Throwable, File]]]
+    episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]
   ): Route = {
     import akka.http.scaladsl.server.Directives._
 
@@ -127,32 +127,33 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
           result               <- ConfigurationController.patch(defaultConfiguration.id, patch)
         } yield result
       }) ~
-      coverEndpoint.toZRoute(PodcastController.getPodcastCover) ~
-      thumbnailEndpoint.toZRoute(EpisodeController.getThumbnail) ~
-      RawRoutes.all(episodesDownloading) ~
-      new SwaggerAkka(openApiDocs).routes
+//      coverEndpoint.toZRoute(PodcastController.getPodcastCover) ~
+//      thumbnailEndpoint.toZRoute(EpisodeController.getThumbnail) ~
+      RawRoutes.all(episodesDownloading) //~
+      //new SwaggerAkka(openApiDocs).routes
   }
 
   def openApiDocs: String = {
     import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
-    import sttp.tapir.openapi.circe.yaml._
+//    import sttp.tapir.openapi.circe.yaml._
 
-    OpenAPIDocsInterpreter()
-      .toOpenAPI(
-        Seq(
-          listPodcastsEndpoint,
-          getPodcastEndpoint,
-          rssEndpoint,
-          checkForUpdatesAllEndpoint,
-          checkForUpdatesEndpoint,
-          createPodcastEndpoint,
-          getConfigEndpoint,
-          updateConfigEndpoint
-        ),
-        "Podpodge Docs",
-        "0.1.0"
-      )
-      .toYaml
+//    OpenAPIDocsInterpreter()
+//      .toOpenAPI(
+//        Seq(
+//          listPodcastsEndpoint,
+//          getPodcastEndpoint,
+//          rssEndpoint,
+//          checkForUpdatesAllEndpoint,
+//          checkForUpdatesEndpoint,
+//          createPodcastEndpoint,
+//          getConfigEndpoint,
+//          updateConfigEndpoint
+//        ),
+//        "Podpodge Docs",
+//        "0.1.0"
+//      )
+//      .toYaml
+    ???
   }
 
 }

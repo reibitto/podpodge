@@ -3,20 +3,21 @@ package podpodge.db.dao
 import podpodge.db.Configuration
 import podpodge.db.patch.PatchConfiguration
 import podpodge.types.ConfigurationId
-import zio.{ Has, UIO, ZIO }
+import zio.ZIO
 
 import java.sql.{ Connection, SQLException }
+import javax.sql.DataSource
 
 object ConfigurationDao extends SqlDao {
   import ctx._
 
-  def getPrimary: ZIO[Has[Connection], SQLException, Configuration.Model] =
+  def getPrimary: ZIO[DataSource, SQLException, Configuration.Model] =
     for {
       configOpt <- ctx.run {
                      quote(query[Configuration.Model].take(1))
                    }.map(_.headOption)
       config    <- configOpt match {
-                     case Some(config) => UIO(config)
+                     case Some(config) => ZIO.succeed(config)
                      case None         =>
                        create(
                          Configuration(
@@ -31,29 +32,29 @@ object ConfigurationDao extends SqlDao {
                    }
     } yield config
 
-  def get(id: ConfigurationId): ZIO[Has[Connection], SQLException, Option[Configuration.Model]] =
+  def get(id: ConfigurationId): ZIO[DataSource, SQLException, Option[Configuration.Model]] =
     ctx.run {
       quote(query[Configuration.Model].filter(_.id == lift(id)).take(1))
     }.map(_.headOption)
 
-  def create(config: Configuration.Insert): ZIO[Has[Connection], SQLException, Configuration.Model] =
+  def create(config: Configuration.Insert): ZIO[DataSource, SQLException, Configuration.Model] =
     ctx.run {
       quote(
         query[Configuration[ConfigurationId]]
-          .insert(lift(config.copy(id = ConfigurationId(0))))
+          .insertValue(lift(config.copy(id = ConfigurationId(0))))
           .returningGenerated(_.id)
       )
     }.map(id => config.copy(id = id))
 
-  def update(model: Configuration.Model): ZIO[Has[Connection], SQLException, Long] =
+  def update(model: Configuration.Model): ZIO[DataSource, SQLException, Long] =
     ctx.run {
-      quote(query[Configuration.Model].filter(_.id == lift(model.id)).update(lift(model)))
+      quote(query[Configuration.Model].filter(_.id == lift(model.id)).updateValue(lift(model)))
     }
 
   def patch(
     id: ConfigurationId,
     patch: PatchConfiguration
-  ): ZIO[Has[Connection], Exception, Configuration.Model] =
+  ): ZIO[DataSource, Exception, Configuration.Model] =
     // TODO: Currently this is a hacky get + update. Fix this to programmatically generate the update statement instead.
     // I don't know how to do this with Quill though. I might need to use something else for it?
     for {

@@ -6,7 +6,7 @@ import java.time.{ Duration, OffsetDateTime }
 
 import podpodge.StaticConfig
 import podpodge.types.{ EpisodeId, PodcastId, _ }
-import sttp.client._
+import sttp.client3._
 import sttp.model.Uri
 
 import scala.util.Try

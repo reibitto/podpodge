@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.{ PathMatcher1, Route }
 import podpodge.controllers.EpisodeController
 import podpodge.http.AkkaHttp._
 import podpodge.types.{ EpisodeId, PodcastId }
-import zio.{ Promise, RefM }
+import zio.{ Promise, Ref }
 
 import java.io.File
 import scala.concurrent.duration._
@@ -17,7 +17,7 @@ object RawRoutes {
   val PodcastIdPart: PathMatcher1[PodcastId] = LongNumber.map(PodcastId(_))
   val EpisodeIdPart: PathMatcher1[EpisodeId] = LongNumber.map(EpisodeId(_))
 
-  def all(episodesDownloading: RefM[Map[EpisodeId, Promise[Throwable, File]]]): Route =
+  def all(episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]): Route =
     pathSingleSlash {
       redirect("/docs", StatusCodes.TemporaryRedirect)
     } ~

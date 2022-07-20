@@ -4,10 +4,13 @@ import podpodge.db.DbMigration
 import podpodge.server.PodpodgeServer
 import zio._
 
-object Main extends zio.App {
-  def run(args: List[String]): URIO[ZEnv, ExitCode] =
-    for {
+object Main extends ZIOAppDefault {
+  def run =
+    (for {
       _        <- DbMigration.migrate.orDie
-      exitCode <- PodpodgeServer.make.useForever.exitCode.provide(PodpodgeRuntime.environment)
-    } yield exitCode
+      _ <- ZIO.scoped {
+        PodpodgeServer.make *> ZIO.never
+      }.forever
+      //.provideEnvironment(PodpodgeRuntime.default.environment)
+    } yield ()).provideEnvironment(PodpodgeRuntime.default.environment)
 }

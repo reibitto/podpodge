@@ -2,7 +2,8 @@ package podpodge
 
 import io.circe.{ Decoder, Encoder }
 import zio.prelude._
-import zio.test.Assertion
+import zio.prelude.Assertion
+import zio.prelude.Assertion._
 
 package object types {
 
@@ -25,7 +26,9 @@ package object types {
       implicitly[Equivalence[FROM, TO]].from(a)
   }
 
-  abstract class RichNewtypeSmart[A: Encoder: Decoder](spec: Assertion[A]) extends NewtypeSmart[A](spec) { self =>
+  abstract class RichNewtypeSmart[A: Encoder: Decoder](spec: Assertion[A]) extends Newtype[A] { self =>
+    // TODO:: assertion
+
     implicit val equiv: A <=> Type = Equivalence(wrap, unwrap)
 
     implicit val encoder: Encoder[Type] = implicitly[Encoder[A]].contramap(unwrap)
@@ -70,7 +73,7 @@ package object types {
   }
   type ServerHost = ServerHost.Type
 
-  object ServerPort extends RichNewtypeSmart[Int](isGreaterThanEqualTo(0) && isLessThanEqualTo(65353)) {
+  object ServerPort extends RichNewtypeSmart[Int](greaterThanOrEqualTo(0) && lessThanOrEqualTo(65353)) {
     val configKey: String = "PODPODGE_PORT"
   }
   type ServerPort = ServerPort.Type

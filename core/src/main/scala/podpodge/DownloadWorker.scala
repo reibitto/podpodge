@@ -2,21 +2,21 @@ package podpodge
 
 import podpodge.db.Episode
 import podpodge.db.dao.EpisodeDao
+import podpodge.http.Sttp
 import podpodge.types._
-import sttp.client._
-import sttp.client.httpclient.zio.SttpClient
+import sttp.client3._
 import sttp.model.Uri
-import zio.blocking.Blocking
-import zio.duration._
-import zio.logging.{ log, Logging }
 import zio.stream.ZStream
-import zio.{ Has, Queue, URIO, ZIO }
+import zio.{Queue, URIO, ZIO}
 
 import java.sql.Connection
-import java.time.{ Instant, ZoneOffset }
+import java.time.{Instant, ZoneOffset}
+import zio._
+
+import javax.sql.DataSource
 
 object DownloadWorker {
-  def make(queue: Queue[CreateEpisodeRequest]): URIO[Logging with Has[Connection] with Blocking with SttpClient, Unit] =
+  def make(queue: Queue[CreateEpisodeRequest]): URIO[DataSource with Sttp, Unit] =
     ZStream
       .fromQueue(queue)
       .foreach { request =>
@@ -26,13 +26,13 @@ object DownloadWorker {
         }
 
         create.absorb.tapError { t =>
-          log.throwable(s"Error creating episode for $request", t)
+          ZIO.logErrorCause(s"Error creating episode for $request", Cause.fail(t))
         }.ignore
       }
 
   def createEpisodeYouTube(
     request: CreateEpisodeRequest.YouTube
-  ): ZIO[SttpClient with Has[Connection] with Blocking, Throwable, Unit] = {
+  ): ZIO[Sttp with DataSource, Throwable, Unit] = {
     val videoId = request.playlistItem.snippet.resourceId.videoId
 
     for {
@@ -49,7 +49,7 @@ object DownloadWorker {
                      0.seconds                                 // TODO: Calculate duration
                    )
                  )
-      _       <- ZIO.foreach_(request.playlistItem.snippet.thumbnails.highestRes) { thumbnail =>
+      _       <- ZIO.foreachDiscard(request.playlistItem.snippet.thumbnails.highestRes) { thumbnail =>
                    for {
                      uri <- ZIO.fromEither(Uri.parse(thumbnail.url)).catchAll(ZIO.dieMessage(_))
                      req  = basicRequest
@@ -62,7 +62,7 @@ object DownloadWorker {
                                 )
                               )
 
-                     downloadedThumbnail <- SttpClient.send(req)
+                     downloadedThumbnail <- Sttp.send(req)
                      _                   <- ZIO.whenCase(downloadedThumbnail.body) { case Right(_) =>
                                               EpisodeDao.updateImage(episode.id, Some(s"${episode.id}.jpg"))
                                             }
@@ -73,7 +73,7 @@ object DownloadWorker {
 
   def createEpisodeFile(
     request: CreateEpisodeRequest.File
-  ): ZIO[SttpClient with Has[Connection], Throwable, Unit] =
+  ): RIO[Sttp with DataSource, Unit] =
     for {
       _ <- EpisodeDao.create(
              Episode(

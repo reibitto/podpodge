@@ -5,7 +5,7 @@ import io.circe.{ Decoder, Encoder }
 import podpodge.StaticConfig
 import podpodge.types.{ PodcastId, SourceType }
 import podpodge.youtube.Playlist
-import sttp.client._
+import sttp.client3._
 import sttp.model.Uri
 
 import java.io.File

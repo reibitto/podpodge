@@ -10,10 +10,10 @@ object Build {
   object Version {
     val circe      = "0.14.2"
     val enumeratum = "1.7.0"
-    val quill      = "3.10.0"
-    val sttp       = "2.3.0"
-    val tapir      = "0.18.3"
-    val zio        = "1.0.15"
+    val quill      = "4.1.0"
+    val sttp       = "3.7.0"
+    val tapir      = "1.0.2"
+    val zio        = "2.0.0"
   }
 
   lazy val ScalacOptions = Seq(
@@ -44,11 +44,7 @@ object Build {
       "-Ywarn-unused:locals",   // Warn if a local definition is unused.
       "-Ywarn-unused:privates", // Warn if a private member is unused.
       "-Ywarn-unused:implicits" // Warn if an implicit parameter is unused.
-    ).filter(_ => shouldWarnForUnusedCode) ++
-    Seq(
-      "-opt:l:inline",
-      "-opt-inline-from:**"
-    ).filter(_ => shouldOptimize)
+    ).filter(_ => shouldWarnForUnusedCode)
 
   def defaultSettings(projectName: String) =
     Seq(
@@ -59,19 +55,10 @@ object Build {
       libraryDependencies ++= Plugins.BaseCompilerPlugins,
       incOptions ~= (_.withLogRecompileOnMacro(false)),
       autoAPIMappings          := true,
-      resolvers                := Resolvers,
       testFrameworks           := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
       Test / fork              := true,
       Test / logBuffered       := false
     )
-
-  lazy val Resolvers = Seq(
-    // Order of resolvers affects resolution time. More general purpose repositories should come first.
-    Resolver.sonatypeRepo("releases"),
-    Resolver.typesafeRepo("releases"),
-    Resolver.jcenterRepo,
-    Resolver.sonatypeRepo("snapshots")
-  )
 
   def compilerFlag(key: String, default: Boolean): Boolean = {
     val flag = sys.props.get(key).orElse {
@@ -85,8 +72,6 @@ object Build {
 
     flagValue
   }
-
-  lazy val shouldOptimize: Boolean = compilerFlag("scalac.optimize", false)
 
   lazy val shouldWarnForUnusedCode: Boolean = compilerFlag("scalac.unused.enabled", false)
 

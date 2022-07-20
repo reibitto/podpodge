@@ -4,17 +4,19 @@ import akka.http.scaladsl.server.Route
 import podpodge.http.ApiError
 import podpodge.types._
 import podpodge.{ Env, PodpodgeRuntime }
+import sttp.capabilities.WebSockets
 import sttp.capabilities.akka.AkkaStreams
 import sttp.model.StatusCode
 import sttp.tapir.Codec.PlainCodec
 import sttp.tapir.generic.auto.schemaForCaseClass
 import sttp.tapir.json.circe.jsonBody
+import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
-import sttp.tapir.{ oneOf, oneOfMapping, Codec, CodecFormat, Endpoint, EndpointOutput, Schema, SchemaType, Validator }
-import zio.logging.log
+import sttp.tapir.{ oneOf, oneOfVariant, Codec, CodecFormat, Endpoint, EndpointOutput, Schema, SchemaType, Validator }
 import zio.prelude._
-import zio.{ UIO, ZIO }
+import zio.{ Cause, Unsafe, ZIO }
 
+import scala.concurrent.Future
 import scala.xml.{ Elem, XML }
 
 trait TapirSupport {
@@ -53,29 +55,34 @@ trait TapirSupport {
   implicit val xmlCodec: Codec[String, Elem, CodecFormat.Xml] =
     implicitly[PlainCodec[String]].map(XML.loadString(_))(_.toString).format(CodecFormat.Xml())
 
-  private val interpreter: AkkaHttpServerInterpreter = AkkaHttpServerInterpreter()
+  // TODO::
+  private val interpreter: AkkaHttpServerInterpreter =
+    AkkaHttpServerInterpreter()(scala.concurrent.ExecutionContext.Implicits.global)
 
-  implicit class RichZIOAkkaHttpEndpoint[I, O](endpoint: Endpoint[I, ApiError, O, AkkaStreams]) {
+  implicit class RichZIOAkkaHttpEndpoint[I, O](endpoint: Endpoint[Unit, I, ApiError, O, AkkaStreams]) {
     def toZRoute(logic: I => ZIO[Env, Throwable, O]): Route =
-      interpreter.toRoute(endpoint) { in =>
-        PodpodgeRuntime.unsafeRunToFuture {
-          logic(in).absorb
-            .foldM(
-              {
-                case e: ApiError => UIO.left(e)
-                case t           =>
-                  log.throwable("Unhandled error occurred", t) *>
-                    UIO.left(ApiError.InternalError("Internal server error"))
-              },
-              a => UIO.right(a)
-            )
+      interpreter.toRoute(endpoint.serverLogic { in =>
+        Unsafe.unsafe { implicit u =>
+          PodpodgeRuntime.default.unsafe.runToFuture {
+            logic(in).absorb
+              .foldZIO(
+                {
+                  case e: ApiError => ZIO.left(e)
+                  case t           =>
+                    ZIO.logErrorCause("Unhandled error occurred", Cause.fail(t)) *>
+                      ZIO.left(ApiError.InternalError("Internal server error"))
+                },
+                a => ZIO.right(a)
+              )
+          }
         }
-      }
+      }: ServerEndpoint[AkkaStreams with WebSockets, Future])
+
   }
 
   val apiError: EndpointOutput.OneOf[ApiError, ApiError] = oneOf[ApiError](
-    oneOfMapping(StatusCode.NotFound, jsonBody[ApiError.NotFound]),
-    oneOfMapping(StatusCode.BadRequest, jsonBody[ApiError.BadRequest]),
-    oneOfMapping(StatusCode.InternalServerError, jsonBody[ApiError.InternalError])
+    oneOfVariant(StatusCode.NotFound, jsonBody[ApiError.NotFound]),
+    oneOfVariant(StatusCode.BadRequest, jsonBody[ApiError.BadRequest]),
+    oneOfVariant(StatusCode.InternalServerError, jsonBody[ApiError.InternalError])
   )
 }
