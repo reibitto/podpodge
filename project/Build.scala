@@ -1,20 +1,12 @@
 import sbt._
 import Keys._
+
 import scala.Console
 
 object Build {
   val ScalaVersion = "2.13.8"
 
-  val PodpodgeVersion = "0.0.1"
-
-  object Version {
-    val circe      = "0.14.2"
-    val enumeratum = "1.7.0"
-    val quill      = "4.1.0"
-    val sttp       = "3.7.0"
-    val tapir      = "1.0.2"
-    val zio        = "2.0.0"
-  }
+  val PodpodgeVersion = "0.2.0"
 
   lazy val ScalacOptions = Seq(
     "-encoding",
@@ -25,39 +17,40 @@ object Build {
     "-language:postfixOps",
     "-language:implicitConversions",
     "-language:higherKinds",
+    "-Xsource:3",
     "-Xfatal-warnings",
     "-Ymacro-annotations",
-    "-Xlint:nullary-unit",           // Warn when nullary methods return Unit.
-    "-Xlint:inaccessible",           // Warn about inaccessible types in method signatures.
-    "-Xlint:missing-interpolator",   // A string literal appears to be missing an interpolator id.
-    "-Xlint:doc-detached",           // A Scaladoc comment appears to be detached from its element.
-    "-Xlint:private-shadow",         // A private field (or class parameter) shadows a superclass field.
-    "-Xlint:type-parameter-shadow",  // A local type parameter shadows a type already in scope.
-    "-Xlint:delayedinit-select",     // Selecting member of DelayedInit.
-    "-Xlint:stars-align",            // Pattern sequence wildcard must align with sequence component.
-    "-Xlint:option-implicit",        // Option.apply used implicit view.
+    "-Xlint:nullary-unit", // Warn when nullary methods return Unit.
+    "-Xlint:inaccessible", // Warn about inaccessible types in method signatures.
+    "-Xlint:missing-interpolator", // A string literal appears to be missing an interpolator id.
+    "-Xlint:doc-detached", // A Scaladoc comment appears to be detached from its element.
+    "-Xlint:private-shadow", // A private field (or class parameter) shadows a superclass field.
+    "-Xlint:type-parameter-shadow", // A local type parameter shadows a type already in scope.
+    "-Xlint:delayedinit-select", // Selecting member of DelayedInit.
+    "-Xlint:stars-align", // Pattern sequence wildcard must align with sequence component.
+    "-Xlint:option-implicit", // Option.apply used implicit view.
     "-Xlint:poly-implicit-overload", // Parameterized overloaded implicit methods are not visible as view bounds.
-    "-Ywarn-extra-implicit"          // Warn when more than one implicit parameter section is defined.
+    "-Ywarn-extra-implicit" // Warn when more than one implicit parameter section is defined.
   ) ++
     Seq(
-      "-Ywarn-unused:imports",  // Warn if an import selector is not referenced.
-      "-Ywarn-unused:locals",   // Warn if a local definition is unused.
+      "-Ywarn-unused:imports", // Warn if an import selector is not referenced.
+      "-Ywarn-unused:locals", // Warn if a local definition is unused.
       "-Ywarn-unused:privates", // Warn if a private member is unused.
       "-Ywarn-unused:implicits" // Warn if an implicit parameter is unused.
     ).filter(_ => shouldWarnForUnusedCode)
 
   def defaultSettings(projectName: String) =
     Seq(
-      name                     := projectName,
+      name := projectName,
       Test / javaOptions += "-Duser.timezone=UTC",
-      scalacOptions            := ScalacOptions,
+      scalacOptions := ScalacOptions,
       ThisBuild / scalaVersion := ScalaVersion,
       libraryDependencies ++= Plugins.BaseCompilerPlugins,
       incOptions ~= (_.withLogRecompileOnMacro(false)),
-      autoAPIMappings          := true,
-      testFrameworks           := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-      Test / fork              := true,
-      Test / logBuffered       := false
+      autoAPIMappings := true,
+      testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+      Test / fork := true,
+      Test / logBuffered := false
     )
 
   def compilerFlag(key: String, default: Boolean): Boolean = {

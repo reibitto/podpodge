@@ -1,8 +1,8 @@
 package podpodge.rss
 
-import java.time.{ Duration, OffsetDateTime }
-
 import sttp.model.Uri
+
+import java.time.{Duration, OffsetDateTime}
 
 final case class Episode(
   downloadUrl: Uri,

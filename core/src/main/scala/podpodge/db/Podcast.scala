@@ -1,16 +1,16 @@
 package podpodge.db
 
-import io.circe.generic.semiauto._
-import io.circe.{ Decoder, Encoder }
-import podpodge.StaticConfig
-import podpodge.types.{ PodcastId, SourceType }
+import io.circe.{Decoder, Encoder}
+import io.circe.generic.semiauto.*
+import podpodge.types.{PodcastId, SourceType}
 import podpodge.youtube.Playlist
-import sttp.client3._
+import podpodge.StaticConfig
+import sttp.client3.*
 import sttp.model.Uri
 
 import java.io.File
 import java.nio.file.Path
-import java.time.{ Instant, OffsetDateTime, ZoneOffset }
+import java.time.{Instant, OffsetDateTime, ZoneOffset}
 import scala.util.Try
 
 final case class Podcast[ID](
@@ -29,6 +29,7 @@ final case class Podcast[ID](
   image: Option[String],
   lastCheckDate: Option[OffsetDateTime]
 ) {
+
   def imagePath: Option[Path] =
     image.flatMap(name => Try(StaticConfig.coversPath.resolve(name)).toOption)
 
@@ -39,7 +40,7 @@ final case class Podcast[ID](
 }
 
 object Podcast {
-  type Model  = Podcast[PodcastId]
+  type Model = Podcast[PodcastId]
   type Insert = Podcast[Unit]
 
   implicit val encoder: Encoder[Podcast.Model] = deriveEncoder[Podcast.Model]

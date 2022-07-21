@@ -2,29 +2,30 @@ package podpodge.controllers
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
+import akka.stream.scaladsl.{FileIO, Source, StreamConverters}
 import akka.stream.IOResult
-import akka.stream.scaladsl.{ FileIO, Source, StreamConverters }
 import akka.util.ByteString
+import podpodge.{config, *}
 import podpodge.config.Config
+import podpodge.db.dao.{EpisodeDao, PodcastDao}
 import podpodge.db.Podcast
 import podpodge.db.Podcast.Model
-import podpodge.db.dao.{ EpisodeDao, PodcastDao }
-import podpodge.http.{ ApiError, HttpError, Sttp }
-import podpodge.types.{ PodcastId, SourceType }
+import podpodge.http.{ApiError, HttpError, Sttp}
+import podpodge.types.{PodcastId, SourceType}
 import podpodge.youtube.YouTubeClient
-import podpodge.{ config, _ }
-import sttp.client3._
+import sttp.client3.*
 import sttp.model.Uri
-import zio._
+import zio.*
 import zio.stream.ZStream
 
-import java.nio.file.{ Files, Paths }
+import java.nio.file.{Files, Paths}
 import java.sql.SQLException
 import javax.sql.DataSource
 import scala.concurrent.Future
 import scala.xml.Elem
 
 object PodcastController {
+
   def getPodcast(id: PodcastId): RIO[DataSource, Model] =
     PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
 
@@ -42,17 +43,17 @@ object PodcastController {
   ): ZIO[DataSource, Exception, Source[ByteString, Future[IOResult]]] =
     for {
       podcast <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
-      result  <- podcast.imagePath.map(_.toFile) match {
-                   case Some(imageFile) if imageFile.exists() =>
-                     ZIO.succeed(FileIO.fromPath(imageFile.toPath))
+      result <- podcast.imagePath.map(_.toFile) match {
+                  case Some(imageFile) if imageFile.exists() =>
+                    ZIO.succeed(FileIO.fromPath(imageFile.toPath))
 
-                   case _ =>
-                     Option(getClass.getResource("/question.png")).flatMap(ResourceFile.apply) match {
-                       case None           => ZIO.fail(HttpError(StatusCodes.InternalServerError))
-                       case Some(resource) =>
-                         ZIO.succeed(StreamConverters.fromInputStream(() => resource.url.openStream()))
-                     }
-                 }
+                  case _ =>
+                    Option(getClass.getResource("/question.png")).flatMap(ResourceFile.apply) match {
+                      case None => ZIO.fail(HttpError(StatusCodes.InternalServerError))
+                      case Some(resource) =>
+                        ZIO.succeed(StreamConverters.fromInputStream(() => resource.url.openStream()))
+                    }
+                }
     } yield result
 
   def create(
@@ -62,22 +63,22 @@ object PodcastController {
     sourceType match {
       case SourceType.YouTube =>
         for {
-          youTubeApiKey        <- config.youTubeApiKey
-          playlists            <- YouTubeClient.listPlaylists(sources, youTubeApiKey).runCollect
-          podcasts             <- PodcastDao.createAll(playlists.toList.map(Podcast.fromPlaylist))
+          youTubeApiKey <- config.youTubeApiKey
+          playlists     <- YouTubeClient.listPlaylists(sources, youTubeApiKey).runCollect
+          podcasts      <- PodcastDao.createAll(playlists.toList.map(Podcast.fromPlaylist))
           podcastsWithPlaylists = podcasts.zip(playlists)
-          _                    <- ZIO.foreachDiscard(podcastsWithPlaylists) { case (podcast, playlist) =>
-                                    ZIO.foreachDiscard(playlist.snippet.thumbnails.highestRes) { thumbnail =>
-                                      for {
-                                        uri                 <- ZIO.fromEither(Uri.parse(thumbnail.url)).catchAll(ZIO.dieMessage(_))
-                                        req                  = basicRequest.get(uri).response(asPath(StaticConfig.coversPath.resolve(s"${podcast.id}.jpg")))
-                                        downloadedThumbnail <- Sttp.send(req)
-                                        _                   <- ZIO.whenCase(downloadedThumbnail.body) { case Right(_) =>
-                                                                 PodcastDao.updateImage(podcast.id, Some(s"${podcast.id}.jpg"))
-                                                               }
-                                      } yield ()
-                                    }
-                                  }
+          _ <- ZIO.foreachDiscard(podcastsWithPlaylists) { case (podcast, playlist) =>
+                 ZIO.foreachDiscard(playlist.snippet.thumbnails.highestRes) { thumbnail =>
+                   for {
+                     uri <- ZIO.fromEither(Uri.parse(thumbnail.url)).catchAll(ZIO.dieMessage(_))
+                     req = basicRequest.get(uri).response(asPath(StaticConfig.coversPath.resolve(s"${podcast.id}.jpg")))
+                     downloadedThumbnail <- Sttp.send(req)
+                     _ <- ZIO.whenCase(downloadedThumbnail.body) { case Right(_) =>
+                            PodcastDao.updateImage(podcast.id, Some(s"${podcast.id}.jpg"))
+                          }
+                   } yield ()
+                 }
+               }
         } yield podcasts
 
       case SourceType.Directory =>
@@ -98,9 +99,9 @@ object PodcastController {
     for {
       podcasts        <- PodcastDao.list
       externalSources <- EpisodeDao.listExternalSource.map(_.toSet)
-      _               <- ZIO.foreachDiscard(podcasts) { podcast =>
-                           enqueueDownload(downloadQueue)(podcast, externalSources)
-                         }
+      _ <- ZIO.foreachDiscard(podcasts) { podcast =>
+             enqueueDownload(downloadQueue)(podcast, externalSources)
+           }
     } yield ()
 
   def checkForUpdates(
@@ -124,7 +125,7 @@ object PodcastController {
   private def enqueueDownloadFile(
     downloadQueue: Queue[CreateEpisodeRequest]
   )(podcast: Podcast.Model, excludeExternalSources: Set[String]): RIO[Any, Unit] = {
-    import podpodge.util.FileExtensions._
+    import podpodge.util.FileExtensions.*
 
     val excludeExternalPaths = excludeExternalSources.map(s => Paths.get(s).normalize().toFile)
 
@@ -152,7 +153,7 @@ object PodcastController {
     excludeExternalSources: Set[String]
   ): RIO[Sttp with Config, Unit] = for {
     youTubeApiKey <- config.youTubeApiKey
-    result        <- // TODO: Update lastCheckDate here. Will definitely need it for the cron schedule feature.
+    result <- // TODO: Update lastCheckDate here. Will definitely need it for the cron schedule feature.
       YouTubeClient
         .listPlaylistItems(podcast.externalSource, youTubeApiKey)
         .filterNot(item => excludeExternalSources.contains(item.snippet.resourceId.videoId))

@@ -3,18 +3,18 @@ package podpodge.server
 import akka.http.scaladsl.server.Route
 import podpodge.{CreateEpisodeRequest, Env}
 import podpodge.controllers.{ConfigurationController, EpisodeController, PodcastController}
-import podpodge.db.Podcast.Model
+import podpodge.db.{Configuration, Podcast}
 import podpodge.db.dao.ConfigurationDao
 import podpodge.db.patch.PatchConfiguration
-import podpodge.db.{Configuration, Podcast}
+import podpodge.db.Podcast.Model
 import podpodge.http.ApiError
-import podpodge.types._
+import podpodge.types.*
 import sttp.capabilities.akka.AkkaStreams
 import sttp.model.StatusCode
-import sttp.tapir._
+import sttp.tapir.*
 import sttp.tapir.codec.enumeratum.TapirCodecEnumeratum
-import sttp.tapir.generic.auto._
-import sttp.tapir.json.circe._
+import sttp.tapir.generic.auto.*
+import sttp.tapir.json.circe.*
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import zio.{Promise, Queue, Ref, Runtime}
@@ -24,6 +24,7 @@ import scala.concurrent.Future
 import scala.xml.Elem
 
 object Routes extends TapirSupport with TapirCodecEnumeratum {
+
   val listPodcastsEndpoint: Endpoint[Unit, Unit, ApiError, List[Model], Any] =
     endpoint
       .in("podcasts")
@@ -110,7 +111,7 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
     downloadQueue: Queue[CreateEpisodeRequest],
     episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]
   )(implicit runtime: Runtime[Env]): Route = {
-    import akka.http.scaladsl.server.Directives._
+    import akka.http.scaladsl.server.Directives.*
 
     implicit val interpreter: AkkaHttpServerInterpreter =
       AkkaHttpServerInterpreter()(scala.concurrent.ExecutionContext.Implicits.global)

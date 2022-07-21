@@ -1,8 +1,8 @@
 package podpodge.db
 
-import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
-import io.circe.{ Decoder, Encoder }
-import podpodge.types._
+import io.circe.{Decoder, Encoder}
+import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import podpodge.types.*
 
 // All fields are optional because there are other config sources to fall back to (like env vars).
 final case class Configuration[ID](
@@ -15,7 +15,7 @@ final case class Configuration[ID](
 )
 
 object Configuration {
-  type Model  = Configuration[ConfigurationId]
+  type Model = Configuration[ConfigurationId]
   type Insert = Configuration[Option[ConfigurationId]]
 
   implicit val encoder: Encoder[Configuration.Model] = deriveEncoder[Configuration.Model]

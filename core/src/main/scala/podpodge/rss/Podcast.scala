@@ -22,6 +22,7 @@ final case class Podcast(
 )
 
 object Podcast {
+
   def fromDB(podcast: db.Podcast.Model, episodes: List[db.Episode.Model], config: PodpodgeConfig): Podcast =
     Podcast(
       podcast.title,

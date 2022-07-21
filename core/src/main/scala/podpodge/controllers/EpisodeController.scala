@@ -1,17 +1,17 @@
 package podpodge.controllers
 
-import akka.http.scaladsl.model.{ HttpEntity, MediaType, StatusCodes }
+import akka.http.scaladsl.model.{HttpEntity, MediaType, StatusCodes}
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
+import akka.stream.scaladsl.{FileIO, Source, StreamConverters}
 import akka.stream.IOResult
-import akka.stream.scaladsl.{ FileIO, Source, StreamConverters }
 import akka.util.ByteString
-import podpodge.StaticConfig
+import podpodge.db.dao.{ConfigurationDao, EpisodeDao, PodcastDao}
 import podpodge.db.Episode
-import podpodge.db.dao.{ ConfigurationDao, EpisodeDao, PodcastDao }
 import podpodge.http.HttpError
-import podpodge.types._
+import podpodge.types.*
 import podpodge.youtube.YouTubeDL
-import zio._
+import podpodge.StaticConfig
+import zio.*
 
 import java.io.File
 import java.nio.file.Paths
@@ -24,7 +24,7 @@ object EpisodeController {
   def getEpisodeFile(id: EpisodeId): RIO[DataSource, HttpEntity.Default] =
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
-      file    <-
+      file <-
         ZIO
           .succeed(
             StaticConfig.audioPath
@@ -46,28 +46,28 @@ object EpisodeController {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       podcast <- PodcastDao.get(episode.podcastId).someOrFail(HttpError(StatusCodes.NotFound))
       _       <- ZIO.logInfo(s"Requested episode '${episode.title}' on demand")
-      result  <- podcast.sourceType match {
-                   case SourceType.YouTube =>
-                     getEpisodeFileOnDemandYouTube(episodesDownloading)(episode)
+      result <- podcast.sourceType match {
+                  case SourceType.YouTube =>
+                    getEpisodeFileOnDemandYouTube(episodesDownloading)(episode)
 
-                   case SourceType.Directory =>
-                     val mediaPath = Paths.get(episode.externalSource)
+                  case SourceType.Directory =>
+                    val mediaPath = Paths.get(episode.externalSource)
 
-                     ZIO.succeed(
-                       HttpEntity.Default(
-                         MediaType.audio("mpeg", MediaType.NotCompressible, "mp3"),
-                         mediaPath.toFile.length,
-                         FileIO.fromPath(mediaPath)
-                       )
-                     )
-                 }
+                    ZIO.succeed(
+                      HttpEntity.Default(
+                        MediaType.audio("mpeg", MediaType.NotCompressible, "mp3"),
+                        mediaPath.toFile.length,
+                        FileIO.fromPath(mediaPath)
+                      )
+                    )
+                }
     } yield result
 
   def getEpisodeFileOnDemandYouTube(
     episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]
   )(episode: Episode.Model): RIO[DataSource, HttpEntity.Default] =
     for {
-      config     <- ConfigurationDao.getPrimary
+      config <- ConfigurationDao.getPrimary
       promiseMap <- episodesDownloading.updateAndGetZIO { downloadMap =>
                       downloadMap.get(episode.id) match {
                         case None =>
@@ -85,8 +85,8 @@ object EpisodeController {
                         case Some(_) => ZIO.succeed(downloadMap)
                       }
                     }
-      mediaFile  <- promiseMap(episode.id).await
-      _          <- EpisodeDao.updateMediaFile(episode.id, Some(mediaFile.getName))
+      mediaFile <- promiseMap(episode.id).await
+      _         <- EpisodeDao.updateMediaFile(episode.id, Some(mediaFile.getName))
     } yield HttpEntity.Default(
       MediaType.audio("mpeg", MediaType.NotCompressible, "mp3"),
       mediaFile.length,
@@ -96,17 +96,17 @@ object EpisodeController {
   def getThumbnail(id: EpisodeId): RIO[DataSource, Source[ByteString, Future[IOResult]]] =
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
-      result  <- episode.imagePath.map(_.toFile) match {
-                   case Some(imageFile) if imageFile.exists() =>
-                     ZIO.succeed(FileIO.fromPath(imageFile.toPath))
+      result <- episode.imagePath.map(_.toFile) match {
+                  case Some(imageFile) if imageFile.exists() =>
+                    ZIO.succeed(FileIO.fromPath(imageFile.toPath))
 
-                   case _ =>
-                     Option(getClass.getResource("/question.png")).flatMap(ResourceFile.apply) match {
-                       case None           => ZIO.fail(HttpError(StatusCodes.InternalServerError))
-                       case Some(resource) =>
-                         ZIO.succeed(StreamConverters.fromInputStream(() => resource.url.openStream()))
-                     }
-                 }
+                  case _ =>
+                    Option(getClass.getResource("/question.png")).flatMap(ResourceFile.apply) match {
+                      case None => ZIO.fail(HttpError(StatusCodes.InternalServerError))
+                      case Some(resource) =>
+                        ZIO.succeed(StreamConverters.fromInputStream(() => resource.url.openStream()))
+                    }
+                }
     } yield result
 
 }

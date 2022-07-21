@@ -5,11 +5,11 @@ import podpodge.db.Podcast.Model
 import podpodge.types.PodcastId
 import zio.ZIO
 
-import java.sql.{ Connection, SQLException }
+import java.sql.{Connection, SQLException}
 import javax.sql.DataSource
 
 object PodcastDao extends SqlDao {
-  import ctx._
+  import ctx.*
 
   def get(id: PodcastId): ZIO[DataSource, SQLException, Option[Podcast.Model]] =
     ctx.run {

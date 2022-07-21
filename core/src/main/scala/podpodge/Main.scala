@@ -5,7 +5,7 @@ import podpodge.config.Config
 import podpodge.db.DbMigration
 import podpodge.http.SttpLive
 import podpodge.server.PodpodgeServer
-import zio._
+import zio.*
 
 object Main extends ZIOApp {
   override type Environment = Env

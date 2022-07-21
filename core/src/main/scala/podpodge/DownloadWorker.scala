@@ -1,18 +1,19 @@
 package podpodge
 
-import podpodge.db.Episode
 import podpodge.db.dao.EpisodeDao
+import podpodge.db.Episode
 import podpodge.http.Sttp
-import podpodge.types._
-import sttp.client3._
+import podpodge.types.*
+import sttp.client3.*
 import sttp.model.Uri
+import zio.*
 import zio.stream.ZStream
-import zio._
 
-import java.time.{ Instant, ZoneOffset }
+import java.time.{Instant, ZoneOffset}
 import javax.sql.DataSource
 
 object DownloadWorker {
+
   def make(queue: Queue[CreateEpisodeRequest]): URIO[DataSource with Sttp, Unit] =
     ZStream
       .fromQueue(queue)
@@ -43,28 +44,28 @@ object DownloadWorker {
                      request.playlistItem.snippet.publishedAt, // TODO: Add config option to select `request.playlistItem.contentDetails.videoPublishedAt` here
                      None,
                      None,
-                     0.seconds                                 // TODO: Calculate duration
+                     0.seconds // TODO: Calculate duration
                    )
                  )
-      _       <- ZIO.foreachDiscard(request.playlistItem.snippet.thumbnails.highestRes) { thumbnail =>
-                   for {
-                     uri <- ZIO.fromEither(Uri.parse(thumbnail.url)).catchAll(ZIO.dieMessage(_))
-                     req  = basicRequest
-                              .get(uri)
-                              .response(
-                                asPath(
-                                  StaticConfig.thumbnailsPath
-                                    .resolve(request.podcastId.unwrap.toString)
-                                    .resolve(s"${episode.id}.jpg")
-                                )
-                              )
+      _ <- ZIO.foreachDiscard(request.playlistItem.snippet.thumbnails.highestRes) { thumbnail =>
+             for {
+               uri <- ZIO.fromEither(Uri.parse(thumbnail.url)).catchAll(ZIO.dieMessage(_))
+               req = basicRequest
+                       .get(uri)
+                       .response(
+                         asPath(
+                           StaticConfig.thumbnailsPath
+                             .resolve(request.podcastId.unwrap.toString)
+                             .resolve(s"${episode.id}.jpg")
+                         )
+                       )
 
-                     downloadedThumbnail <- Sttp.send(req)
-                     _                   <- ZIO.whenCase(downloadedThumbnail.body) { case Right(_) =>
-                                              EpisodeDao.updateImage(episode.id, Some(s"${episode.id}.jpg"))
-                                            }
-                   } yield ()
-                 }
+               downloadedThumbnail <- Sttp.send(req)
+               _ <- ZIO.whenCase(downloadedThumbnail.body) { case Right(_) =>
+                      EpisodeDao.updateImage(episode.id, Some(s"${episode.id}.jpg"))
+                    }
+             } yield ()
+           }
     } yield ()
   }
 

@@ -1,16 +1,16 @@
 package podpodge.server
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.model.*
 import akka.http.scaladsl.server.{PathMatcher1, Route}
-import podpodge.Env
+import akka.http.scaladsl.server.Directives.*
 import podpodge.controllers.EpisodeController
-import podpodge.http.AkkaHttp._
+import podpodge.http.AkkaHttp.*
 import podpodge.types.{EpisodeId, PodcastId}
+import podpodge.Env
 import zio.{Promise, Ref, Runtime}
 
 import java.io.File
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 // Routes that are using plain akka-http rather than through tapir's interface.
 object RawRoutes {

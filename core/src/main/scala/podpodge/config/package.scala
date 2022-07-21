@@ -1,37 +1,37 @@
 package podpodge
 
 import podpodge.db.dao.ConfigurationDao
-import podpodge.types._
+import podpodge.types.*
 import sttp.model.Uri
-import zio._
-import zio.prelude.Newtype
+import zio.*
 
 package object config {
   type Config = PodpodgeConfig
 
   object Config {
+
     def live =
       ZLayer {
         // TODO: This code is repetitious and somewhat brittle (newtypes are adding some safety though). We really
         // should use a config library here. Something like ciris, pureconfig, zio-config, etc. I haven't decided on one
         // yet.
         for {
-          dbConfig       <- ConfigurationDao.getPrimary.orDie
-          youTubeApiKey  <-
+          dbConfig <- ConfigurationDao.getPrimary.orDie
+          youTubeApiKey <-
             ZIO
               .fromOption(dbConfig.youTubeApiKey)
               .orElse(
                 System.env(YouTubeApiKey.configKey).some.flatMap(s => ZIO.fromOption(YouTubeApiKey.make(s).toOption))
               )
               .option
-          serverHost     <-
+          serverHost <-
             ZIO
               .fromOption(dbConfig.serverHost)
               .orElse(
                 System.env(ServerHost.configKey).some.flatMap(s => ZIO.fromOption(ServerHost.make(s).toOption))
               )
               .orElseSucceed(ServerHost("localhost"))
-          serverPort     <-
+          serverPort <-
             ZIO
               .fromOption(dbConfig.serverPort)
               .orElse(

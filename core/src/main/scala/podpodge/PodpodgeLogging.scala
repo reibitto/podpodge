@@ -1,8 +1,8 @@
 package podpodge
 
+import zio.logging.{console, LogColor, LogFormat}
+import zio.logging.LogFormat.*
 import zio.ZLayer
-import zio.logging.LogFormat._
-import zio.logging.{LogColor, LogFormat, console}
 
 object PodpodgeLogging {
 

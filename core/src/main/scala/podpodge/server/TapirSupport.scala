@@ -1,23 +1,23 @@
 package podpodge.server
 
 import akka.http.scaladsl.server.Route
-import podpodge.Env
 import podpodge.http.ApiError
-import podpodge.types._
-import sttp.capabilities.WebSockets
+import podpodge.types.*
+import podpodge.Env
 import sttp.capabilities.akka.AkkaStreams
-import sttp.model.{ MediaType, StatusCode }
-import sttp.tapir.Codec.PlainCodec
+import sttp.capabilities.WebSockets
+import sttp.model.{MediaType, StatusCode}
+import sttp.tapir.{oneOf, oneOfVariant, Codec, CodecFormat, Endpoint, EndpointOutput, Schema, SchemaType, Validator}
 import sttp.tapir.generic.auto.schemaForCaseClass
 import sttp.tapir.json.circe.jsonBody
-import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
-import sttp.tapir.{ oneOf, oneOfVariant, Codec, CodecFormat, Endpoint, EndpointOutput, Schema, SchemaType, Validator }
-import zio.prelude._
-import zio.{ Cause, Runtime, Unsafe, ZIO }
+import sttp.tapir.server.ServerEndpoint
+import sttp.tapir.Codec.PlainCodec
+import zio.{Cause, Runtime, Unsafe, ZIO}
+import zio.prelude.*
 
 import scala.concurrent.Future
-import scala.xml.{ Elem, XML }
+import scala.xml.{Elem, XML}
 
 trait TapirSupport {
   implicit def stringNewtypeSchema[T <: RichNewtype[String]#Type]: Schema[T] = Schema(SchemaType.SString())
@@ -29,22 +29,25 @@ trait TapirSupport {
   ): Codec[String, T, CodecFormat.TextPlain] =
     Codec.string.map(RichNewtype.wrap(_))(RichNewtype.unwrap(_))
 
-  implicit def intSmartSchema[T <: RichNewtypeSmart[Int]#Type]: Schema[T] = Schema(SchemaType.SInteger())
+  implicit def intNewtypeSchema[T <: RichNewtype[Int]#Type]: Schema[T] = Schema(SchemaType.SInteger())
 
-  implicit def intSmartValidator[T <: RichNewtypeSmart[Int]#Type]: Validator[T] =
-    // TODO: Finish this validator
-    Validator.pass
+  implicit def intNewtypeValidator[T <: RichNewtype[Int]#Type](implicit
+    equiv: Equivalence[Int, T]
+  ): Validator[T] =
+    // TODO: Is it possible to include Newtype.assertion validation here?
+    Validator.min(1L).contramap(RichNewtype.unwrap(_))
 
-  implicit def intSmartCodec[T <: RichNewtypeSmart[Int]#Type](implicit
+  implicit def intNewtypeCodec[T <: RichNewtype[Int]#Type](implicit
     equiv: Equivalence[Int, T]
   ): Codec[String, T, CodecFormat.TextPlain] =
-    Codec.int.map(RichNewtypeSmart.wrap(_))(RichNewtypeSmart.unwrap(_))
+    Codec.int.map(RichNewtype.wrap(_))(RichNewtype.unwrap(_))
 
   implicit def longNewtypeSchema[T <: RichNewtype[Long]#Type]: Schema[T] = Schema(SchemaType.SInteger())
 
   implicit def longNewtypeValidator[T <: RichNewtype[Long]#Type](implicit
     equiv: Equivalence[Long, T]
   ): Validator[T] =
+    // TODO: Is it possible to include Newtype.assertion validation here?
     Validator.min(1L).contramap(RichNewtype.unwrap(_))
 
   implicit def longNewtypeCodec[T <: RichNewtype[Long]#Type](implicit
@@ -56,6 +59,7 @@ trait TapirSupport {
     implicitly[PlainCodec[String]].map(XML.loadString(_))(_.toString).format(CodecFormat.Xml())
 
   implicit class RichZIOAkkaHttpEndpoint[I, O](endpoint: Endpoint[Unit, I, ApiError, O, AkkaStreams]) {
+
     def toZRoute(
       logic: I => ZIO[Env, Throwable, O]
     )(implicit interpreter: AkkaHttpServerInterpreter, runtime: Runtime[Env]): Route =
@@ -66,7 +70,7 @@ trait TapirSupport {
               .foldZIO(
                 {
                   case e: ApiError => ZIO.left(e)
-                  case t           =>
+                  case t =>
                     ZIO.logErrorCause("Unhandled error occurred", Cause.fail(t)) *>
                       ZIO.left(ApiError.InternalError("Internal server error"))
                 },
