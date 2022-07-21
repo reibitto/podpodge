@@ -1,8 +1,8 @@
 package podpodge.db.patch
 
-import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
-import io.circe.{ Decoder, Encoder }
-import podpodge.types.{ DownloaderPath, ServerHost, ServerPort, ServerScheme, Tristate, YouTubeApiKey }
+import io.circe.{Decoder, Encoder}
+import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import podpodge.types.{DownloaderPath, ServerHost, ServerPort, ServerScheme, Tristate, YouTubeApiKey}
 
 final case class PatchConfiguration(
   youTubeApiKey: Tristate[YouTubeApiKey] = Tristate.None,

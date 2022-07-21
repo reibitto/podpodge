@@ -1,10 +1,8 @@
 import podpodge.config.Config
-import sttp.client.httpclient.zio.SttpClient
-import zio.logging.Logging
-import zio.{ Has, ZEnv }
+import podpodge.http.Sttp
 
-import java.sql.Connection
+import javax.sql.DataSource
 
 package object podpodge {
-  type Env = ZEnv with Logging with SttpClient with Has[Connection] with Config
+  type Env = Sttp & DataSource & Config
 }

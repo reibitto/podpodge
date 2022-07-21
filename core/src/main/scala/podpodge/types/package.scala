@@ -1,31 +1,12 @@
 package podpodge
 
-import io.circe.{ Decoder, Encoder }
-import zio.prelude._
-import zio.test.Assertion
+import io.circe.{Decoder, Encoder}
+import zio.prelude.*
+import zio.prelude.Assertion.*
 
 package object types {
 
   abstract class RichNewtype[A: Encoder: Decoder] extends Newtype[A] { self =>
-    implicit val equiv: A <=> Type = Equivalence(wrap, unwrap)
-
-    implicit val encoder: Encoder[Type] = implicitly[Encoder[A]].contramap(unwrap)
-    implicit val decoder: Decoder[Type] = implicitly[Decoder[A]].map(wrap)
-
-    implicit final class UnwrapOps(value: Type) {
-      def unwrap: A = self.unwrap(value)
-    }
-  }
-
-  object RichNewtype {
-    def wrap[FROM, TO](a: FROM)(implicit equiv: Equivalence[FROM, TO]): TO =
-      implicitly[Equivalence[FROM, TO]].to(a)
-
-    def unwrap[FROM, TO](a: TO)(implicit equiv: Equivalence[FROM, TO]): FROM =
-      implicitly[Equivalence[FROM, TO]].from(a)
-  }
-
-  abstract class RichNewtypeSmart[A: Encoder: Decoder](spec: Assertion[A]) extends NewtypeSmart[A](spec) { self =>
     implicit val equiv: A <=> Type = Equivalence(wrap, unwrap)
 
     implicit val encoder: Encoder[Type] = implicitly[Encoder[A]].contramap(unwrap)
@@ -39,7 +20,8 @@ package object types {
       make(value).fold(e => throw new IllegalArgumentException(e.mkString("; ")), identity)
   }
 
-  object RichNewtypeSmart {
+  object RichNewtype {
+
     def wrap[FROM, TO](a: FROM)(implicit equiv: Equivalence[FROM, TO]): TO =
       implicitly[Equivalence[FROM, TO]].to(a)
 
@@ -70,8 +52,10 @@ package object types {
   }
   type ServerHost = ServerHost.Type
 
-  object ServerPort extends RichNewtypeSmart[Int](isGreaterThanEqualTo(0) && isLessThanEqualTo(65353)) {
+  object ServerPort extends RichNewtype[Int] {
     val configKey: String = "PODPODGE_PORT"
+
+    override def assertion = assert(greaterThanOrEqualTo(0) && lessThanOrEqualTo(65353))
   }
   type ServerPort = ServerPort.Type
 

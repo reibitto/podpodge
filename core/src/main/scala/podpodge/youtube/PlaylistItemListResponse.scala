@@ -1,9 +1,9 @@
 package podpodge.youtube
 
-import java.time.OffsetDateTime
-
+import io.circe.generic.semiauto.*
 import io.circe.Decoder
-import io.circe.generic.semiauto._
+
+import java.time.OffsetDateTime
 
 final case class PlaylistItemListResponse(
   items: List[PlaylistItem],

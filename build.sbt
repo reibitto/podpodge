@@ -1,17 +1,16 @@
-import Build.Version
-import sbt.Keys._
 import sbt._
+import sbt.Keys._
 import sbtwelcome._
 
 lazy val root = project
   .in(file("."))
   .aggregate(core)
   .settings(
-    name        := "podpodge",
+    name := "podpodge",
     addCommandAlias("run", "podpodge/run"),
     addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll"),
     addCommandAlias("fmtCheck", "all root/scalafmtSbtCheck root/scalafmtCheckAll"),
-    logo        :=
+    logo :=
       s"""
          |    ____            __                __
          |   / __ \\____  ____/ /___  ____  ____/ /___ ____
@@ -31,40 +30,35 @@ lazy val root = project
 
 lazy val core = module("podpodge", Some("core"))
   .settings(
-    fork                    := true,
-    run / baseDirectory     := file("."),
+    fork := true,
+    run / baseDirectory := file("."),
     reStart / baseDirectory := file("."),
     libraryDependencies ++= Seq(
-      "dev.zio"                      %% "zio"                        % Version.zio,
-      "dev.zio"                      %% "zio-streams"                % Version.zio,
-      "dev.zio"                      %% "zio-process"                % "0.6.1",
-      "dev.zio"                      %% "zio-config"                 % "1.0.10",
-      "dev.zio"                      %% "zio-logging"                % "0.5.14",
-      "dev.zio"                      %% "zio-prelude"                % "1.0.0-RC6",
-      "io.github.kitlangton"         %% "zio-magic"                  % "0.3.12",
-      "org.scala-lang.modules"       %% "scala-xml"                  % "2.1.0",
-      "com.beachape"                 %% "enumeratum"                 % Version.enumeratum,
-      "com.beachape"                 %% "enumeratum-circe"           % Version.enumeratum,
-      "io.circe"                     %% "circe-core"                 % Version.circe,
-      "io.circe"                     %% "circe-parser"               % Version.circe,
-      "io.circe"                     %% "circe-generic"              % Version.circe,
-      "com.typesafe.akka"            %% "akka-http"                  % "10.2.9",
-      "com.typesafe.akka"            %% "akka-actor-typed"           % "2.6.19",
-      "com.typesafe.akka"            %% "akka-stream"                % "2.6.19",
-      "com.softwaremill.sttp.client" %% "core"                       % Version.sttp,
-      "com.softwaremill.sttp.client" %% "circe"                      % Version.sttp,
-      "com.softwaremill.sttp.client" %% "httpclient-backend-zio"     % Version.sttp,
-      "com.softwaremill.sttp.tapir"  %% "tapir-enumeratum"           % Version.tapir,
-      "com.softwaremill.sttp.tapir"  %% "tapir-json-circe"           % Version.tapir,
-      "com.softwaremill.sttp.tapir"  %% "tapir-akka-http-server"     % Version.tapir,
-      "com.softwaremill.sttp.tapir"  %% "tapir-openapi-docs"         % Version.tapir,
-      "com.softwaremill.sttp.tapir"  %% "tapir-openapi-circe-yaml"   % Version.tapir,
-      "com.softwaremill.sttp.tapir"  %% "tapir-swagger-ui-akka-http" % Version.tapir,
-      "io.getquill"                  %% "quill-jdbc"                 % Version.quill,
-      "io.getquill"                  %% "quill-jdbc-zio"             % Version.quill,
-      "org.xerial"                    % "sqlite-jdbc"                % "3.36.0.3",
-      "org.flywaydb"                  % "flyway-core"                % "8.5.13",
-      "org.slf4j"                     % "slf4j-nop"                  % "1.7.36"
+      "dev.zio" %% "zio" % V.zio,
+      "dev.zio" %% "zio-streams" % V.zio,
+      "dev.zio" %% "zio-logging" % V.zioLogging,
+      "dev.zio" %% "zio-process" % V.zioProcess,
+      "dev.zio" %% "zio-prelude" % V.zioPrelude,
+      "org.scala-lang.modules" %% "scala-xml" % V.scalaXml,
+      "com.beachape" %% "enumeratum" % V.enumeratum,
+      "com.beachape" %% "enumeratum-circe" % V.enumeratum,
+      "io.circe" %% "circe-core" % V.circe,
+      "io.circe" %% "circe-parser" % V.circe,
+      "io.circe" %% "circe-generic" % V.circe,
+      "com.typesafe.akka" %% "akka-http" % V.akkaHttp,
+      "com.typesafe.akka" %% "akka-actor-typed" % V.akka,
+      "com.typesafe.akka" %% "akka-stream" % V.akka,
+      "com.softwaremill.sttp.client3" %% "core" % V.sttp,
+      "com.softwaremill.sttp.client3" %% "circe" % V.sttp,
+      "com.softwaremill.sttp.client3" %% "zio" % V.sttp,
+      "com.softwaremill.sttp.tapir" %% "tapir-enumeratum" % V.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % V.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % V.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % V.tapir,
+      "io.getquill" %% "quill-jdbc-zio" % V.quill,
+      "org.xerial" % "sqlite-jdbc" % V.sqliteJdbc,
+      "org.flywaydb" % "flyway-core" % V.flyway,
+      "org.slf4j" % "slf4j-nop" % V.slf4j
     )
   )
 

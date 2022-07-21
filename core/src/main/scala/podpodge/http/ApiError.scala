@@ -1,7 +1,7 @@
 package podpodge.http
 
-import io.circe.{ Decoder, Encoder }
-import io.circe.generic.semiauto._
+import io.circe.{Decoder, Encoder}
+import io.circe.generic.semiauto.*
 
 sealed trait ApiError extends Exception
 

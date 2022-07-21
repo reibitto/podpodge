@@ -1,14 +1,13 @@
 package podpodge.db
 
-import java.io.File
-import java.nio.file.Path
-import java.time.{ Duration, OffsetDateTime }
-
+import podpodge.types.{EpisodeId, PodcastId, *}
 import podpodge.StaticConfig
-import podpodge.types.{ EpisodeId, PodcastId, _ }
-import sttp.client._
+import sttp.client3.*
 import sttp.model.Uri
 
+import java.io.File
+import java.nio.file.Path
+import java.time.{Duration, OffsetDateTime}
 import scala.util.Try
 
 final case class Episode[ID](
@@ -22,6 +21,7 @@ final case class Episode[ID](
   mediaFile: Option[String],
   duration: Duration
 ) {
+
   def imagePath: Option[Path] =
     image.flatMap(name => Try(StaticConfig.thumbnailsPath.resolve(podcastId.unwrap.toString).resolve(name)).toOption)
 
@@ -32,6 +32,6 @@ final case class Episode[ID](
 }
 
 object Episode {
-  type Model  = Episode[EpisodeId]
+  type Model = Episode[EpisodeId]
   type Insert = Episode[Option[EpisodeId]]
 }

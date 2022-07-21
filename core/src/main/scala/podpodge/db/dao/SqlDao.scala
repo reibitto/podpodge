@@ -1,11 +1,11 @@
 package podpodge.db.dao
 
-import io.getquill.{ MappedEncoding, SnakeCase, SqliteZioJdbcContext }
-import podpodge.types._
+import io.getquill.{MappedEncoding, SnakeCase, SqliteZioJdbcContext}
+import podpodge.types.*
 import zio.prelude.Equivalence
 
+import java.time.{Duration, OffsetDateTime}
 import java.time.format.DateTimeFormatter
-import java.time.{ Duration, OffsetDateTime }
 
 trait SqlDao extends MappedEncodings {
   val ctx: SqliteZioJdbcContext[SnakeCase.type] = SqlDao.ctx
@@ -16,6 +16,7 @@ object SqlDao {
 }
 
 trait MappedEncodings {
+
   implicit val offsetDateTimeEncoder: MappedEncoding[OffsetDateTime, String] =
     MappedEncoding[OffsetDateTime, String](_.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
 
@@ -33,16 +34,6 @@ trait MappedEncodings {
 
   implicit def newtypeDecoder[A, T <: RichNewtype[A]#Type](implicit equiv: Equivalence[A, T]): MappedEncoding[A, T] =
     MappedEncoding[A, T](RichNewtype.wrap(_))
-
-  implicit def newtypeSmartEncoder[A, T <: RichNewtypeSmart[A]#Type](implicit
-    equiv: Equivalence[A, T]
-  ): MappedEncoding[T, A] =
-    MappedEncoding[T, A](RichNewtypeSmart.unwrap(_))
-
-  implicit def newtypeSmartDecoder[A, T <: RichNewtypeSmart[A]#Type](implicit
-    equiv: Equivalence[A, T]
-  ): MappedEncoding[A, T] =
-    MappedEncoding[A, T](RichNewtypeSmart.wrap(_))
 
   implicit val sourceTypeEncoder: MappedEncoding[SourceType, String] =
     MappedEncoding[SourceType, String](_.entryName)

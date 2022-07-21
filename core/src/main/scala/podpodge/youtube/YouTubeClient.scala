@@ -1,27 +1,27 @@
 package podpodge.youtube
 
+import podpodge.http.Sttp
 import podpodge.types.YouTubeApiKey
-import sttp.client._
-import sttp.client.circe.asJson
-import sttp.client.httpclient.zio.SttpClient
-import sttp.model.{ Header, MediaType }
-import zio.Chunk
-import zio.blocking.Blocking
+import sttp.client3.*
+import sttp.client3.circe.*
+import sttp.model.{Header, MediaType}
 import zio.stream.ZStream
+import zio.Chunk
 
 object YouTubeClient {
+
   def listPlaylists(
     ids: Seq[String],
     youTubeApiKey: YouTubeApiKey
-  ): ZStream[SttpClient with Blocking, Throwable, Playlist] =
-    ZStream.paginateChunkM(Option.empty[String]) { pageToken =>
+  ): ZStream[Sttp, Throwable, Playlist] =
+    ZStream.paginateChunkZIO(Option.empty[String]) { pageToken =>
       val request = basicRequest
         .get(
           uri"https://www.googleapis.com/youtube/v3/playlists".withParams(
             Map(
-              "key"        -> youTubeApiKey.unwrap,
-              "id"         -> ids.mkString(","),
-              "part"       -> "snippet,contentDetails,id",
+              "key" -> youTubeApiKey.unwrap,
+              "id" -> ids.mkString(","),
+              "part" -> "snippet,contentDetails,id",
               "maxResults" -> "50"
             ) ++ pageToken.map("pageToken" -> _).toMap
           )
@@ -29,7 +29,7 @@ object YouTubeClient {
         .headers(Header.contentType(MediaType.ApplicationJson))
         .response(asJson[PlaylistListResponse])
 
-      SttpClient.send(request).map(_.body).absolve.map { r =>
+      Sttp.send(request).map(_.body).absolve.map { r =>
         (Chunk.fromIterable(r.items), r.nextPageToken.map(Some(_)))
       }
     }
@@ -37,16 +37,16 @@ object YouTubeClient {
   def listPlaylistItems(
     playlistId: String,
     youTubeApiKey: YouTubeApiKey
-  ): ZStream[SttpClient with Blocking, Throwable, PlaylistItem] =
+  ): ZStream[Sttp, Throwable, PlaylistItem] =
     ZStream
-      .paginateChunkM(Option.empty[String]) { pageToken =>
+      .paginateChunkZIO(Option.empty[String]) { pageToken =>
         val request = basicRequest
           .get(
             uri"https://www.googleapis.com/youtube/v3/playlistItems".withParams(
               Map(
-                "key"        -> youTubeApiKey.unwrap,
+                "key" -> youTubeApiKey.unwrap,
                 "playlistId" -> playlistId,
-                "part"       -> "snippet,contentDetails,id",
+                "part" -> "snippet,contentDetails,id",
                 "maxResults" -> "50"
               ) ++ pageToken.map("pageToken" -> _).toMap
             )
@@ -54,7 +54,7 @@ object YouTubeClient {
           .headers(Header.contentType(MediaType.ApplicationJson))
           .response(asJson[PlaylistItemListResponse])
 
-        SttpClient.send(request).map(_.body).absolve.map { r =>
+        Sttp.send(request).map(_.body).absolve.map { r =>
           (Chunk.fromIterable(r.items), r.nextPageToken.map(Some(_)))
         }
       }

@@ -1,12 +1,13 @@
 package podpodge.db
 
-import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.output.MigrateResult
-import zio.Task
+import org.flywaydb.core.Flyway
+import zio.{Task, ZIO}
 
 object DbMigration {
+
   def migrate: Task[MigrateResult] =
-    Task {
+    ZIO.attempt {
       val flyway = Flyway
         .configure()
         .dataSource("jdbc:sqlite:data/podpodge.db", "", "")

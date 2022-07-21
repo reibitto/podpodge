@@ -1,9 +1,10 @@
 package podpodge.types
 
+import io.circe.*
 import io.circe.Decoder.Result
-import io.circe._
 
 sealed trait Tristate[+A] {
+
   def toOption: Option[A] = this match {
     case Tristate.Unspecified | Tristate.None => None
     case Tristate.Some(x)                     => Some(x)
@@ -17,14 +18,15 @@ sealed trait Tristate[+A] {
 }
 
 object Tristate {
-  case object Unspecified        extends Tristate[Nothing]
-  case object None               extends Tristate[Nothing]
+  case object Unspecified extends Tristate[Nothing]
+  case object None extends Tristate[Nothing]
   final case class Some[A](a: A) extends Tristate[A]
 
   implicit def encoder[A: Encoder]: Encoder[Tristate[A]] = new Encoder[Tristate[A]] {
+
     final def apply(a: Tristate[A]): Json = a match {
-      case Tristate.Some(v)     => implicitly[Encoder[A]].apply(v)
-      case Tristate.None        =>
+      case Tristate.Some(v) => implicitly[Encoder[A]].apply(v)
+      case Tristate.None =>
         Json.Null
       case Tristate.Unspecified =>
         // I want to specify `Json.Absent` or something like that here, but not sure if it's possible

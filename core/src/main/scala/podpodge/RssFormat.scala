@@ -1,12 +1,12 @@
 package podpodge
 
-import java.time.format.DateTimeFormatter
-
 import podpodge.rss.Podcast
 
+import java.time.format.DateTimeFormatter
 import scala.xml.Elem
 
 object RssFormat {
+
   def encode(podcast: Podcast): Elem =
     <rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" version="2.0">
       <channel>
