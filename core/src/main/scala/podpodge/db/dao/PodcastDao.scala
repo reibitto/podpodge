@@ -5,7 +5,7 @@ import podpodge.db.Podcast.Model
 import podpodge.types.PodcastId
 import zio.ZIO
 
-import java.sql.{Connection, SQLException}
+import java.sql.SQLException
 import javax.sql.DataSource
 
 object PodcastDao extends SqlDao {

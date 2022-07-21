@@ -41,7 +41,7 @@ package object config {
                   .flatMap(s => ZIO.fromOption(s.toIntOption.flatMap(n => ServerPort.make(n).toOption)))
               )
               .orElseSucceed(ServerPort(8080))
-          serverScheme   <-
+          serverScheme <-
             ZIO
               .fromOption(dbConfig.serverScheme)
               .orElse(

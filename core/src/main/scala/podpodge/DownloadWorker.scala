@@ -14,7 +14,7 @@ import javax.sql.DataSource
 
 object DownloadWorker {
 
-  def make(queue: Queue[CreateEpisodeRequest]): URIO[DataSource with Sttp, Unit] =
+  def make(queue: Queue[CreateEpisodeRequest]): URIO[DataSource & Sttp, Unit] =
     ZStream
       .fromQueue(queue)
       .foreach { request =>
@@ -30,7 +30,7 @@ object DownloadWorker {
 
   def createEpisodeYouTube(
     request: CreateEpisodeRequest.YouTube
-  ): ZIO[Sttp with DataSource, Throwable, Unit] = {
+  ): ZIO[Sttp & DataSource, Throwable, Unit] = {
     val videoId = request.playlistItem.snippet.resourceId.videoId
 
     for {
@@ -71,7 +71,7 @@ object DownloadWorker {
 
   def createEpisodeFile(
     request: CreateEpisodeRequest.File
-  ): RIO[Sttp with DataSource, Unit] =
+  ): RIO[Sttp & DataSource, Unit] =
     for {
       _ <- EpisodeDao.create(
              Episode(

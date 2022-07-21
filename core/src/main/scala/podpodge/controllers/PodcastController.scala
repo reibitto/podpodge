@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFi
 import akka.stream.scaladsl.{FileIO, Source, StreamConverters}
 import akka.stream.IOResult
 import akka.util.ByteString
-import podpodge.{config, *}
+import podpodge.*
 import podpodge.config.Config
 import podpodge.db.dao.{EpisodeDao, PodcastDao}
 import podpodge.db.Podcast
@@ -31,7 +31,7 @@ object PodcastController {
 
   def listPodcasts: ZIO[DataSource, SQLException, List[Model]] = PodcastDao.list
 
-  def getPodcastRss(id: PodcastId): RIO[DataSource with Config, Elem] =
+  def getPodcastRss(id: PodcastId): RIO[DataSource & Config, Elem] =
     for {
       config   <- config.get
       podcast  <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
@@ -59,13 +59,20 @@ object PodcastController {
   def create(
     sourceType: SourceType,
     sources: List[String]
-  ): RIO[Sttp with DataSource with Config, List[Podcast.Model]] =
+  ): RIO[Sttp & DataSource & Config, List[Podcast.Model]] =
     sourceType match {
       case SourceType.YouTube =>
         for {
           youTubeApiKey <- config.youTubeApiKey
           playlists     <- YouTubeClient.listPlaylists(sources, youTubeApiKey).runCollect
-          podcasts      <- PodcastDao.createAll(playlists.toList.map(Podcast.fromPlaylist))
+          _ <- ZIO.when(playlists.isEmpty) {
+                 ZIO.fail(
+                   ApiError.BadRequest(
+                     "No playlists found. Are you sure you marked them as unlisted or public rather than private? Currently private playlists are not supported."
+                   )
+                 )
+               }
+          podcasts <- PodcastDao.createAll(playlists.toList.map(Podcast.fromPlaylist))
           podcastsWithPlaylists = podcasts.zip(playlists)
           _ <- ZIO.foreachDiscard(podcastsWithPlaylists) { case (podcast, playlist) =>
                  ZIO.foreachDiscard(playlist.snippet.thumbnails.highestRes) { thumbnail =>
@@ -95,7 +102,7 @@ object PodcastController {
 
   def checkForUpdatesAll(
     downloadQueue: Queue[CreateEpisodeRequest]
-  ): RIO[Sttp with DataSource with Config, Unit] =
+  ): RIO[Sttp & DataSource & Config, Unit] =
     for {
       podcasts        <- PodcastDao.list
       externalSources <- EpisodeDao.listExternalSource.map(_.toSet)
@@ -106,7 +113,7 @@ object PodcastController {
 
   def checkForUpdates(
     downloadQueue: Queue[CreateEpisodeRequest]
-  )(id: PodcastId): RIO[Sttp with DataSource with Config, Unit] =
+  )(id: PodcastId): RIO[Sttp & DataSource & Config, Unit] =
     for {
       podcast         <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
       externalSources <- EpisodeDao.listExternalSource.map(_.toSet)
@@ -116,7 +123,7 @@ object PodcastController {
   private def enqueueDownload(downloadQueue: Queue[CreateEpisodeRequest])(
     podcast: Podcast.Model,
     excludeExternalSources: Set[String]
-  ): RIO[Sttp with Config, Unit] =
+  ): RIO[Sttp & Config, Unit] =
     podcast.sourceType match {
       case SourceType.YouTube   => enqueueDownloadYouTube(downloadQueue)(podcast, excludeExternalSources)
       case SourceType.Directory => enqueueDownloadFile(downloadQueue)(podcast, excludeExternalSources)
@@ -151,7 +158,7 @@ object PodcastController {
   )(
     podcast: Podcast.Model,
     excludeExternalSources: Set[String]
-  ): RIO[Sttp with Config, Unit] = for {
+  ): RIO[Sttp & Config, Unit] = for {
     youTubeApiKey <- config.youTubeApiKey
     result <- // TODO: Update lastCheckDate here. Will definitely need it for the cron schedule feature.
       YouTubeClient

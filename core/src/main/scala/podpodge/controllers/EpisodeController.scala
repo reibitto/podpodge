@@ -15,7 +15,6 @@ import zio.*
 
 import java.io.File
 import java.nio.file.Paths
-import java.sql.Connection
 import javax.sql.DataSource
 import scala.concurrent.Future
 

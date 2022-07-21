@@ -19,7 +19,7 @@ object Main extends ZIOApp {
     Runtime.removeDefaultLoggers >>> PodpodgeLogging.default
   )
 
-  def run: ZIO[Env with ZIOAppArgs with Scope, Throwable, Unit] =
+  def run: ZIO[Env & ZIOAppArgs & Scope, Throwable, Unit] =
     for {
       _ <- DbMigration.migrate.orDie
       _ <- ZIO.scoped {

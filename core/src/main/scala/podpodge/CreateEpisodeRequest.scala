@@ -3,7 +3,7 @@ package podpodge
 import podpodge.types.PodcastId
 import podpodge.youtube.PlaylistItem
 
-import java.io.{File as JFile}
+import java.io.File as JFile
 
 sealed trait CreateEpisodeRequest
 

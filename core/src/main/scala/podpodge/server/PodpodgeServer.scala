@@ -3,18 +3,15 @@ package podpodge.server
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.Http
-import podpodge.{config, CreateEpisodeRequest, DownloadWorker, Env, StaticConfig}
-import podpodge.config.Config
-import podpodge.http.Sttp
+import podpodge.*
 import podpodge.types.EpisodeId
 import zio.*
 
 import java.io.File
-import javax.sql.DataSource
 
 object PodpodgeServer {
 
-  def make: ZIO[Scope with Env, Throwable, Http.ServerBinding] = {
+  def make: ZIO[Scope & Env, Throwable, Http.ServerBinding] = {
     implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "podpodge-system")
 
     for {

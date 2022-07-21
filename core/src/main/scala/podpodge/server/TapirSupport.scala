@@ -78,7 +78,7 @@ trait TapirSupport {
               )
           }
         }
-      }: ServerEndpoint[AkkaStreams with WebSockets, Future])
+      }: ServerEndpoint[AkkaStreams & WebSockets, Future])
 
   }
 

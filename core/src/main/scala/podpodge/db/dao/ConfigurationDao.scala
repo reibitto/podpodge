@@ -5,7 +5,7 @@ import podpodge.db.Configuration
 import podpodge.types.ConfigurationId
 import zio.ZIO
 
-import java.sql.{Connection, SQLException}
+import java.sql.SQLException
 import javax.sql.DataSource
 
 object ConfigurationDao extends SqlDao {
