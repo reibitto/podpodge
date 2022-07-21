@@ -10,7 +10,8 @@ object PodpodgeLogging {
     timestamp.color(LogColor.BLUE) |-|
       level.highlight |-|
       fiberId.color(LogColor.WHITE) |-|
-      line.highlight
+      line.highlight |-|
+      cause.highlight
 
   val default: ZLayer[Any, Nothing, Unit] = console(coloredFormat)
 

@@ -18,7 +18,7 @@ object AkkaHttp {
 
     val asFuture = Unsafe.unsafe { implicit u =>
       runtime.unsafe.runToFuture {
-        zio.tapErrorCause(c => ZIO.logErrorCause("Unhandled internal server error", Cause.fail(c))).either
+        zio.tapErrorCause(c => ZIO.logErrorCause("Unhandled internal server error", c)).either
       }
     }
 

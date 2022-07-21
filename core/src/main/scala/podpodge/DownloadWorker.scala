@@ -23,8 +23,8 @@ object DownloadWorker {
           case r: CreateEpisodeRequest.File    => createEpisodeFile(r)
         }
 
-        create.absorb.tapError { t =>
-          ZIO.logErrorCause(s"Error creating episode for $request", Cause.fail(t))
+        create.absorb.tapErrorCause { t =>
+          ZIO.logErrorCause(s"Error creating episode for $request", t)
         }.ignore
       }
 

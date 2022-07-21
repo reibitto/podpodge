@@ -71,7 +71,7 @@ trait TapirSupport {
                 {
                   case e: ApiError => ZIO.left(e)
                   case t =>
-                    ZIO.logErrorCause("Unhandled error occurred", Cause.fail(t)) *>
+                    ZIO.logErrorCause("Unhandled error occurred", Cause.die(t)) *>
                       ZIO.left(ApiError.InternalError("Internal server error"))
                 },
                 a => ZIO.right(a)
