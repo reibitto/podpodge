@@ -4,18 +4,19 @@ import akka.http.scaladsl.marshalling.{ ToResponseMarshallable, ToResponseMarsha
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import podpodge.{ Env, PodpodgeRuntime }
+import podpodge.Env
 import zio._
 
 import scala.util.{ Failure, Success }
 
 object AkkaHttp {
-  implicit def toZioRoute[A: ToResponseMarshaller](zio: ZIO[Env, Throwable, A]): Route = zioRoute(zio)
+  implicit def toZioRoute[A: ToResponseMarshaller](zio: ZIO[Env, Throwable, A])(implicit runtime: Runtime[Env]): Route =
+    zioRoute(zio)
 
-  def zioRoute[A: ToResponseMarshaller](zio: ZIO[Env, Throwable, A]): Route = {
+  def zioRoute[A: ToResponseMarshaller](zio: ZIO[Env, Throwable, A])(implicit runtime: Runtime[Env]): Route = {
 
     val asFuture = Unsafe.unsafe { implicit u =>
-      PodpodgeRuntime.default.unsafe.runToFuture {
+      runtime.unsafe.runToFuture {
         zio.tapErrorCause(c => ZIO.logErrorCause("Unhandled internal server error", Cause.fail(c))).either
       }
     }

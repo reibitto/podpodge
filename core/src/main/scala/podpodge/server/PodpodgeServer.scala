@@ -6,14 +6,14 @@ import akka.http.scaladsl.Http
 import podpodge.config.Config
 import podpodge.http.Sttp
 import podpodge.types.EpisodeId
-import podpodge.{CreateEpisodeRequest, DownloadWorker, StaticConfig, config}
+import podpodge.{CreateEpisodeRequest, DownloadWorker, Env, StaticConfig, config}
 import zio._
 
 import java.io.File
 import javax.sql.DataSource
 
 object PodpodgeServer {
-  def make: ZIO[Scope with DataSource with Sttp with Config, Throwable, Http.ServerBinding] = {
+  def make: ZIO[Scope with Env, Throwable, Http.ServerBinding] = {
     implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "podpodge-system")
 
     for {
@@ -22,11 +22,12 @@ object PodpodgeServer {
       downloadQueue       <- Queue.unbounded[CreateEpisodeRequest]
       _                   <- DownloadWorker.make(downloadQueue).forkDaemon
       episodesDownloading <- Ref.Synchronized.make(Map.empty[EpisodeId, Promise[Throwable, File]])
+      runtime <- ZIO.runtime[Env]
       server              <- ZIO.acquireRelease(
                                ZIO.fromFuture { _ =>
                                  Http()
                                    .newServerAt(config.serverHost.unwrap, config.serverPort.unwrap)
-                                   .bind(Routes.make(downloadQueue, episodesDownloading))
+                                   .bind(Routes.make(downloadQueue, episodesDownloading)(runtime))
                                } <* ZIO.logInfo(s"Starting server at ${config.baseUri}")
                              )(server =>
                                (for {

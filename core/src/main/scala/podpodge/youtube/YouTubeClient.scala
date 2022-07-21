@@ -4,7 +4,7 @@ import podpodge.http.Sttp
 import podpodge.types.YouTubeApiKey
 import sttp.client3._
 import sttp.client3.circe._
-import sttp.model.{Header, MediaType}
+import sttp.model.{ Header, MediaType }
 import zio.Chunk
 import zio.stream.ZStream
 
@@ -12,7 +12,7 @@ object YouTubeClient {
   def listPlaylists(
     ids: Seq[String],
     youTubeApiKey: YouTubeApiKey
-  ): ZStream[Sttp , Throwable, Playlist] =
+  ): ZStream[Sttp, Throwable, Playlist] =
     ZStream.paginateChunkZIO(Option.empty[String]) { pageToken =>
       val request = basicRequest
         .get(
@@ -36,7 +36,7 @@ object YouTubeClient {
   def listPlaylistItems(
     playlistId: String,
     youTubeApiKey: YouTubeApiKey
-  ): ZStream[Sttp , Throwable, PlaylistItem] =
+  ): ZStream[Sttp, Throwable, PlaylistItem] =
     ZStream
       .paginateChunkZIO(Option.empty[String]) { pageToken =>
         val request = basicRequest

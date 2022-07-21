@@ -1,13 +1,13 @@
 package podpodge.controllers
 
-import akka.http.scaladsl.model.{HttpEntity, MediaType, StatusCodes}
+import akka.http.scaladsl.model.{ HttpEntity, MediaType, StatusCodes }
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
 import akka.stream.IOResult
-import akka.stream.scaladsl.{FileIO, Source, StreamConverters}
+import akka.stream.scaladsl.{ FileIO, Source, StreamConverters }
 import akka.util.ByteString
 import podpodge.StaticConfig
 import podpodge.db.Episode
-import podpodge.db.dao.{ConfigurationDao, EpisodeDao, PodcastDao}
+import podpodge.db.dao.{ ConfigurationDao, EpisodeDao, PodcastDao }
 import podpodge.http.HttpError
 import podpodge.types._
 import podpodge.youtube.YouTubeDL
@@ -25,12 +25,14 @@ object EpisodeController {
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       file    <-
-        ZIO.succeed(
-          StaticConfig.audioPath
-            .resolve(episode.podcastId.unwrap.toString)
-            .resolve(s"${episode.externalSource}.mp3")
-            .toFile
-        ).filterOrFail(_.exists)(HttpError(StatusCodes.NotFound))
+        ZIO
+          .succeed(
+            StaticConfig.audioPath
+              .resolve(episode.podcastId.unwrap.toString)
+              .resolve(s"${episode.externalSource}.mp3")
+              .toFile
+          )
+          .filterOrFail(_.exists)(HttpError(StatusCodes.NotFound))
     } yield HttpEntity.Default(
       MediaType.audio("mpeg", MediaType.NotCompressible, "mp3"),
       file.length,

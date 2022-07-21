@@ -2,10 +2,10 @@ package podpodge.db.dao
 
 import podpodge.db.Episode
 import podpodge.db.Episode.Model
-import podpodge.types.{EpisodeId, PodcastId}
+import podpodge.types.{ EpisodeId, PodcastId }
 import zio.ZIO
 
-import java.sql.{Connection, SQLException}
+import java.sql.{ Connection, SQLException }
 import javax.sql.DataSource
 
 object EpisodeDao extends SqlDao {

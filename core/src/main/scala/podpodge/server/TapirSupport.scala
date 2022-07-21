@@ -1,12 +1,12 @@
 package podpodge.server
 
 import akka.http.scaladsl.server.Route
+import podpodge.Env
 import podpodge.http.ApiError
 import podpodge.types._
-import podpodge.{ Env, PodpodgeRuntime }
 import sttp.capabilities.WebSockets
 import sttp.capabilities.akka.AkkaStreams
-import sttp.model.StatusCode
+import sttp.model.{ MediaType, StatusCode }
 import sttp.tapir.Codec.PlainCodec
 import sttp.tapir.generic.auto.schemaForCaseClass
 import sttp.tapir.json.circe.jsonBody
@@ -14,7 +14,7 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 import sttp.tapir.{ oneOf, oneOfVariant, Codec, CodecFormat, Endpoint, EndpointOutput, Schema, SchemaType, Validator }
 import zio.prelude._
-import zio.{ Cause, Unsafe, ZIO }
+import zio.{ Cause, Runtime, Unsafe, ZIO }
 
 import scala.concurrent.Future
 import scala.xml.{ Elem, XML }
@@ -55,15 +55,13 @@ trait TapirSupport {
   implicit val xmlCodec: Codec[String, Elem, CodecFormat.Xml] =
     implicitly[PlainCodec[String]].map(XML.loadString(_))(_.toString).format(CodecFormat.Xml())
 
-  // TODO::
-  private val interpreter: AkkaHttpServerInterpreter =
-    AkkaHttpServerInterpreter()(scala.concurrent.ExecutionContext.Implicits.global)
-
   implicit class RichZIOAkkaHttpEndpoint[I, O](endpoint: Endpoint[Unit, I, ApiError, O, AkkaStreams]) {
-    def toZRoute(logic: I => ZIO[Env, Throwable, O]): Route =
+    def toZRoute(
+      logic: I => ZIO[Env, Throwable, O]
+    )(implicit interpreter: AkkaHttpServerInterpreter, runtime: Runtime[Env]): Route =
       interpreter.toRoute(endpoint.serverLogic { in =>
         Unsafe.unsafe { implicit u =>
-          PodpodgeRuntime.default.unsafe.runToFuture {
+          runtime.unsafe.runToFuture {
             logic(in).absorb
               .foldZIO(
                 {
@@ -85,4 +83,8 @@ trait TapirSupport {
     oneOfVariant(StatusCode.BadRequest, jsonBody[ApiError.BadRequest]),
     oneOfVariant(StatusCode.InternalServerError, jsonBody[ApiError.InternalError])
   )
+
+  val imageJpegCodec = new CodecFormat {
+    def mediaType: MediaType = MediaType.ImageJpeg
+  }
 }

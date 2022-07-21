@@ -4,31 +4,65 @@ import podpodge.db.dao.ConfigurationDao
 import podpodge.types._
 import sttp.model.Uri
 import zio._
-import zio.config._
-
-import java.sql.Connection
-import zio.System
-
-import javax.sql.DataSource
+import zio.prelude.Newtype
 
 package object config {
   type Config = PodpodgeConfig
 
   object Config {
-    def live: ZLayer[DataSource, ReadError[String], PodpodgeConfig] = {
+    def live =
       ZLayer {
+        // TODO: This code is repetitious and somewhat brittle (newtypes are adding some safety though). We really
+        // should use a config library here. Something like ciris, pureconfig, zio-config, etc. I haven't decided on one
+        // yet.
         for {
-          _ <- ZIO.unit
+          dbConfig       <- ConfigurationDao.getPrimary.orDie
+          youTubeApiKey  <-
+            ZIO
+              .fromOption(dbConfig.youTubeApiKey)
+              .orElse(
+                System.env(YouTubeApiKey.configKey).some.flatMap(s => ZIO.fromOption(YouTubeApiKey.make(s).toOption))
+              )
+              .option
+          serverHost     <-
+            ZIO
+              .fromOption(dbConfig.serverHost)
+              .orElse(
+                System.env(ServerHost.configKey).some.flatMap(s => ZIO.fromOption(ServerHost.make(s).toOption))
+              )
+              .orElseSucceed(ServerHost("localhost"))
+          serverPort     <-
+            ZIO
+              .fromOption(dbConfig.serverPort)
+              .orElse(
+                System
+                  .env(ServerPort.configKey)
+                  .some
+                  .flatMap(s => ZIO.fromOption(s.toIntOption.flatMap(n => ServerPort.make(n).toOption)))
+              )
+              .orElseSucceed(ServerPort(8080))
+          serverScheme   <-
+            ZIO
+              .fromOption(dbConfig.serverScheme)
+              .orElse(
+                System.env(ServerScheme.configKey).some.flatMap(s => ZIO.fromOption(ServerScheme.make(s).toOption))
+              )
+              .orElseSucceed(ServerScheme("http"))
+          downloaderPath <-
+            ZIO
+              .fromOption(dbConfig.downloaderPath)
+              .orElse(
+                System.env(DownloaderPath.configKey).some.flatMap(s => ZIO.fromOption(DownloaderPath.make(s).toOption))
+              )
+              .orElseSucceed(DownloaderPath("youtube-dl"))
         } yield PodpodgeConfig(
-          Some(YouTubeApiKey("")),
-          ServerHost("localhost"),
-          ServerPort(8080),
-          ServerScheme("http"),
-          //DownloaderPath("youtube-dl")
-          DownloaderPath("yt-dlp")
+          youTubeApiKey,
+          serverHost,
+          serverPort,
+          serverScheme,
+          downloaderPath
         )
       }
-    }
   }
 
   case class PodpodgeConfig(

@@ -4,7 +4,7 @@ import podpodge.db.Configuration
 import podpodge.db.dao.ConfigurationDao
 import podpodge.db.patch.PatchConfiguration
 import podpodge.types.ConfigurationId
-import podpodge.{config => _}
+import podpodge.{ config => _ }
 import zio._
 
 import java.sql.Connection

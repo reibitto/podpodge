@@ -37,8 +37,8 @@ lazy val core = module("podpodge", Some("core"))
     libraryDependencies ++= Seq(
       "dev.zio"                       %% "zio"                     % Version.zio,
       "dev.zio"                       %% "zio-streams"             % Version.zio,
+      "dev.zio"                       %% "zio-logging"             % "2.0.1",
       "dev.zio"                       %% "zio-process"             % "0.7.1",
-      "dev.zio"                       %% "zio-config"              % "3.0.1",
       "dev.zio"                       %% "zio-prelude"             % "1.0.0-RC15",
       "org.scala-lang.modules"        %% "scala-xml"               % "2.1.0",
       "com.beachape"                  %% "enumeratum"              % Version.enumeratum,

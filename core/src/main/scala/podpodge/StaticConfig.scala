@@ -1,8 +1,8 @@
 package podpodge
 
-import zio.{Task, ZIO}
+import zio.{ Task, ZIO }
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{ Files, Path, Paths }
 
 object StaticConfig {
   val assetsPath: Path     = Paths.get("data/assets")

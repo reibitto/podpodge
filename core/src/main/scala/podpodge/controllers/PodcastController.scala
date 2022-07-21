@@ -3,23 +3,23 @@ package podpodge.controllers
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
 import akka.stream.IOResult
-import akka.stream.scaladsl.{FileIO, Source, StreamConverters}
+import akka.stream.scaladsl.{ FileIO, Source, StreamConverters }
 import akka.util.ByteString
 import podpodge.config.Config
 import podpodge.db.Podcast
 import podpodge.db.Podcast.Model
-import podpodge.db.dao.{EpisodeDao, PodcastDao}
-import podpodge.http.{ApiError, HttpError, Sttp}
-import podpodge.types.{PodcastId, SourceType}
+import podpodge.db.dao.{ EpisodeDao, PodcastDao }
+import podpodge.http.{ ApiError, HttpError, Sttp }
+import podpodge.types.{ PodcastId, SourceType }
 import podpodge.youtube.YouTubeClient
-import podpodge.{CreateEpisodeRequest, RssFormat, StaticConfig, config, rss}
+import podpodge.{ config, _ }
 import sttp.client3._
 import sttp.model.Uri
 import zio._
 import zio.stream.ZStream
 
-import java.nio.file.{Files, Paths}
-import java.sql.{Connection, SQLException}
+import java.nio.file.{ Files, Paths }
+import java.sql.SQLException
 import javax.sql.DataSource
 import scala.concurrent.Future
 import scala.xml.Elem
@@ -49,7 +49,8 @@ object PodcastController {
                    case _ =>
                      Option(getClass.getResource("/question.png")).flatMap(ResourceFile.apply) match {
                        case None           => ZIO.fail(HttpError(StatusCodes.InternalServerError))
-                       case Some(resource) => ZIO.succeed(StreamConverters.fromInputStream(() => resource.url.openStream()))
+                       case Some(resource) =>
+                         ZIO.succeed(StreamConverters.fromInputStream(() => resource.url.openStream()))
                      }
                  }
     } yield result
@@ -57,7 +58,7 @@ object PodcastController {
   def create(
     sourceType: SourceType,
     sources: List[String]
-  ): RIO[Sttp with DataSource  with Config, List[Podcast.Model]] =
+  ): RIO[Sttp with DataSource with Config, List[Podcast.Model]] =
     sourceType match {
       case SourceType.YouTube =>
         for {
@@ -111,12 +112,10 @@ object PodcastController {
       _               <- enqueueDownload(downloadQueue)(podcast, externalSources)
     } yield ()
 
-  private def enqueueDownload(
-    downloadQueue: Queue[CreateEpisodeRequest]
-  )(
+  private def enqueueDownload(downloadQueue: Queue[CreateEpisodeRequest])(
     podcast: Podcast.Model,
     excludeExternalSources: Set[String]
-  ): RIO[Sttp  with Config, Unit] =
+  ): RIO[Sttp with Config, Unit] =
     podcast.sourceType match {
       case SourceType.YouTube   => enqueueDownloadYouTube(downloadQueue)(podcast, excludeExternalSources)
       case SourceType.Directory => enqueueDownloadFile(downloadQueue)(podcast, excludeExternalSources)
@@ -135,8 +134,7 @@ object PodcastController {
       .filterNot(item => excludeExternalPaths.contains(item))
       .filter { s =>
         s.extension match {
-          case Some(ext) if Set("mp3", "ogg", "m4a").contains(ext.toLowerCase) =>
-            true
+          case Some(ext) if Set("mp3", "ogg", "m4a").contains(ext.toLowerCase) => true
           case _                                                               => false
         }
       }
@@ -152,7 +150,7 @@ object PodcastController {
   )(
     podcast: Podcast.Model,
     excludeExternalSources: Set[String]
-  ): RIO[Sttp  with Config, Unit] = for {
+  ): RIO[Sttp with Config, Unit] = for {
     youTubeApiKey <- config.youTubeApiKey
     result        <- // TODO: Update lastCheckDate here. Will definitely need it for the cron schedule feature.
       YouTubeClient

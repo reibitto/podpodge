@@ -7,12 +7,9 @@ import podpodge.types._
 import sttp.client3._
 import sttp.model.Uri
 import zio.stream.ZStream
-import zio.{Queue, URIO, ZIO}
-
-import java.sql.Connection
-import java.time.{Instant, ZoneOffset}
 import zio._
 
+import java.time.{ Instant, ZoneOffset }
 import javax.sql.DataSource
 
 object DownloadWorker {
