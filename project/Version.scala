@@ -19,7 +19,7 @@ object V {
 
   val sttp = "3.7.2"
 
-  val tapir = "1.0.2"
+  val tapir = "1.0.3"
 
   val zio = "2.0.0"
 
