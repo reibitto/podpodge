@@ -9,7 +9,7 @@ object V {
 
   val flyway = "9.0.4"
 
-  val quill = "4.1.0"
+  val quill = "4.2.0"
 
   val scalaXml = "2.1.0"
 
