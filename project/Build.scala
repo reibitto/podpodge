@@ -44,6 +44,7 @@ object Build {
       name := projectName,
       Test / javaOptions += "-Duser.timezone=UTC",
       scalacOptions := ScalacOptions,
+      javaOptions += "-Dfile.encoding=UTF-8",
       ThisBuild / scalaVersion := ScalaVersion,
       libraryDependencies ++= Plugins.BaseCompilerPlugins,
       incOptions ~= (_.withLogRecompileOnMacro(false)),

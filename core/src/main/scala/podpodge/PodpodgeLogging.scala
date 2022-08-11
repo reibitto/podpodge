@@ -11,6 +11,7 @@ object PodpodgeLogging {
       level.highlight |-|
       fiberId.color(LogColor.WHITE) |-|
       line.highlight |-|
+      newLine |-|
       cause.highlight
 
   val default: ZLayer[Any, Nothing, Unit] = console(coloredFormat)
