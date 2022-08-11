@@ -1,6 +1,6 @@
 package podpodge
 
-import io.getquill.context.ZioJdbc.DataSourceLayer
+import io.getquill.jdbczio.Quill
 import podpodge.config.Config
 import podpodge.db.DbMigration
 import podpodge.http.SttpLive
@@ -14,7 +14,7 @@ object Main extends ZIOApp {
 
   override def bootstrap: ZLayer[Scope, Any, Environment] = ZLayer.make[Environment](
     SttpLive.make,
-    DataSourceLayer.fromPrefix("ctx"),
+    Quill.DataSource.fromPrefix("ctx"),
     Config.live,
     Runtime.removeDefaultLoggers >>> PodpodgeLogging.default
   )
