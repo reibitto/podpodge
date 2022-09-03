@@ -7,7 +7,7 @@ object V {
 
   val enumeratum = "1.7.0"
 
-  val flyway = "9.2.1"
+  val flyway = "9.2.2"
 
   val quill = "4.3.0"
 
