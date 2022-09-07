@@ -1,7 +1,7 @@
 object V {
   val akka = "2.6.19"
 
-  val akkaHttp = "10.2.9"
+  val akkaHttp = "10.2.10"
 
   val circe = "0.14.2"
 
