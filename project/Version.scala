@@ -1,5 +1,5 @@
 object V {
-  val akka = "2.6.19"
+  val akka = "2.6.20"
 
   val akkaHttp = "10.2.9"
 
