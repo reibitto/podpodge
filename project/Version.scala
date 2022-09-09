@@ -15,7 +15,7 @@ object V {
 
   val slf4j = "1.7.36"
 
-  val sqliteJdbc = "3.39.2.1"
+  val sqliteJdbc = "3.39.3.0"
 
   val sttp = "3.7.6"
 
