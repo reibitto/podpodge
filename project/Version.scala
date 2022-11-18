@@ -13,7 +13,7 @@ object V {
 
   val scalaXml = "2.1.0"
 
-  val slf4j = "1.7.36"
+  val slf4j = "2.0.4"
 
   val sqliteJdbc = "3.39.2.1"
 
