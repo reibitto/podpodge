@@ -11,7 +11,7 @@ object V {
 
   val quill = "4.4.1"
 
-  val scalaXml = "2.1.0"
+  val scalaXml = "2.2.0"
 
   val slf4j = "2.0.7"
 
