@@ -3,7 +3,7 @@ object V {
 
   val akkaHttp = "10.2.9"
 
-  val circe = "0.14.5"
+  val circe = "0.14.6"
 
   val enumeratum = "1.7.2"
 
