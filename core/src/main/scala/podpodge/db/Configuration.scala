@@ -6,12 +6,12 @@ import podpodge.types.*
 
 // All fields are optional because there are other config sources to fall back to (like env vars).
 final case class Configuration[ID](
-  id: ID,
-  youTubeApiKey: Option[YouTubeApiKey],
-  serverHost: Option[ServerHost],
-  serverPort: Option[ServerPort],
-  serverScheme: Option[ServerScheme],
-  downloaderPath: Option[DownloaderPath]
+    id: ID,
+    youTubeApiKey: Option[YouTubeApiKey],
+    serverHost: Option[ServerHost],
+    serverPort: Option[ServerPort],
+    serverScheme: Option[ServerScheme],
+    downloaderPath: Option[DownloaderPath]
 )
 
 object Configuration {

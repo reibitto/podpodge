@@ -108,8 +108,8 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
       .out(streamBinaryBody(AkkaStreams)(imageJpegCodec))
 
   def make(
-    downloadQueue: Queue[CreateEpisodeRequest],
-    episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]
+      downloadQueue: Queue[CreateEpisodeRequest],
+      episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]
   )(implicit runtime: Runtime[Env]): Route = {
     import akka.http.scaladsl.server.Directives.*
 

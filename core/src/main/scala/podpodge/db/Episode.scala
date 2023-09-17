@@ -11,15 +11,15 @@ import java.time.{Duration, OffsetDateTime}
 import scala.util.Try
 
 final case class Episode[ID](
-  id: ID,
-  podcastId: PodcastId,
-  guid: String,
-  externalSource: String,
-  title: String,
-  publishDate: OffsetDateTime,
-  image: Option[String],
-  mediaFile: Option[String],
-  duration: Duration
+    id: ID,
+    podcastId: PodcastId,
+    guid: String,
+    externalSource: String,
+    title: String,
+    publishDate: OffsetDateTime,
+    image: Option[String],
+    mediaFile: Option[String],
+    duration: Duration
 ) {
 
   def imagePath: Option[Path] =

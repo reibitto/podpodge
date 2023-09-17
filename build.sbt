@@ -21,10 +21,10 @@ lazy val root = project
          |
          |""".stripMargin,
     usefulTasks := Seq(
-      UsefulTask("a", "run", "Runs the Podpodge server"),
-      UsefulTask("b", "~podpodge/reStart", "Runs the Podpodge server with file-watch enabled"),
-      UsefulTask("c", "~compile", "Compile all modules with file-watch enabled"),
-      UsefulTask("d", "fmt", "Run scalafmt on the entire project")
+      UsefulTask("run", "Runs the Podpodge server"),
+      UsefulTask("~podpodge/reStart", "Runs the Podpodge server with file-watch enabled"),
+      UsefulTask("~compile", "Compile all modules with file-watch enabled"),
+      UsefulTask("fmt", "Run scalafmt on the entire project")
     )
   )
 

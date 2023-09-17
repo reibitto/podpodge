@@ -2,7 +2,8 @@ package podpodge.db
 
 import org.flywaydb.core.api.output.MigrateResult
 import org.flywaydb.core.Flyway
-import zio.{Task, ZIO}
+import zio.Task
+import zio.ZIO
 
 object DbMigration {
 

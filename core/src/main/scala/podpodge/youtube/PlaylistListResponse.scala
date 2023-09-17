@@ -6,9 +6,9 @@ import io.circe.Decoder
 import java.time.OffsetDateTime
 
 final case class PlaylistListResponse(
-  items: List[Playlist],
-  nextPageToken: Option[String],
-  pageInfo: PageInfo
+    items: List[Playlist],
+    nextPageToken: Option[String],
+    pageInfo: PageInfo
 )
 
 object PlaylistListResponse {
@@ -16,9 +16,9 @@ object PlaylistListResponse {
 }
 
 final case class Playlist(
-  id: String,
-  snippet: PlaylistSnippet,
-  contentDetails: PlaylistContentDetails
+    id: String,
+    snippet: PlaylistSnippet,
+    contentDetails: PlaylistContentDetails
 )
 
 object Playlist {
@@ -26,12 +26,12 @@ object Playlist {
 }
 
 final case class PlaylistSnippet(
-  publishedAt: OffsetDateTime,
-  channelId: String,
-  title: String,
-  description: String,
-  thumbnails: Thumbnails,
-  channelTitle: String
+    publishedAt: OffsetDateTime,
+    channelId: String,
+    title: String,
+    description: String,
+    thumbnails: Thumbnails,
+    channelTitle: String
 )
 
 object PlaylistSnippet {

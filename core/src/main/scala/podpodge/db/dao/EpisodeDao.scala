@@ -39,7 +39,7 @@ object EpisodeDao extends SqlDao {
     }.map(id => episode.copy(id = id))
 
   def createAll(
-    episodes: List[Episode.Insert]
+      episodes: List[Episode.Insert]
   ): ZIO[DataSource, SQLException, List[Episode[EpisodeId]]] =
     ctx.run {
       liftQuery(episodes.map(_.copy(id = EpisodeId(0)))).foreach(e =>

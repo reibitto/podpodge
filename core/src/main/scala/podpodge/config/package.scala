@@ -66,11 +66,11 @@ package object config {
   }
 
   case class PodpodgeConfig(
-    youTubeApiKey: Option[YouTubeApiKey],
-    serverHost: ServerHost,
-    serverPort: ServerPort,
-    serverScheme: ServerScheme,
-    downloaderPath: DownloaderPath
+      youTubeApiKey: Option[YouTubeApiKey],
+      serverHost: ServerHost,
+      serverPort: ServerPort,
+      serverScheme: ServerScheme,
+      downloaderPath: DownloaderPath
   ) {
     val baseUri: Uri = Uri(serverScheme.unwrap, serverHost.unwrap, serverPort.unwrap)
   }

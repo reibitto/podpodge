@@ -52,8 +52,8 @@ object ConfigurationDao extends SqlDao {
     }
 
   def patch(
-    id: ConfigurationId,
-    patch: PatchConfiguration
+      id: ConfigurationId,
+      patch: PatchConfiguration
   ): ZIO[DataSource, Exception, Configuration.Model] =
     // TODO: Currently this is a hacky get + update. Fix this to programmatically generate the update statement instead.
     // I don't know how to do this with Quill though. I might need to use something else for it?

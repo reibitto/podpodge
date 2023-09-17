@@ -15,7 +15,6 @@ object PodpodgeServer {
     implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "podpodge-system")
 
     for {
-      _                   <- StaticConfig.ensureDirectoriesExist
       config              <- config.get
       downloadQueue       <- Queue.unbounded[CreateEpisodeRequest]
       _                   <- DownloadWorker.make(downloadQueue).forkDaemon

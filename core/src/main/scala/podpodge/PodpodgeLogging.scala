@@ -1,19 +1,25 @@
 package podpodge
 
-import zio.logging.{console, LogColor, LogFormat}
+import zio.logging.consoleLogger
+import zio.logging.ConsoleLoggerConfig
+import zio.logging.LogColor
+import zio.logging.LogFilter
+import zio.logging.LogFormat
 import zio.logging.LogFormat.*
+import zio.LogLevel
 import zio.ZLayer
 
 object PodpodgeLogging {
 
-  private val coloredFormat: LogFormat =
+  val coloredFormat: LogFormat =
     timestamp.color(LogColor.BLUE) |-|
       level.highlight |-|
       fiberId.color(LogColor.WHITE) |-|
       line.highlight |-|
-      newLine |-|
-      cause.highlight
+      newLine +
+      cause.highlight.filter(LogFilter.causeNonEmpty)
 
-  val default: ZLayer[Any, Nothing, Unit] = console(coloredFormat)
+  val default: ZLayer[Any, Nothing, Unit] =
+    consoleLogger(ConsoleLoggerConfig(coloredFormat, LogFilter.logLevel(LogLevel.Debug)))
 
 }
