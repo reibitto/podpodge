@@ -39,7 +39,7 @@ object PodcastController {
     } yield RssFormat.encode(rss.Podcast.fromDB(podcast, episodes, config))
 
   def getPodcastCover(
-    id: PodcastId
+      id: PodcastId
   ): ZIO[DataSource, Exception, Source[ByteString, Future[IOResult]]] =
     for {
       podcast <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
@@ -57,8 +57,8 @@ object PodcastController {
     } yield result
 
   def create(
-    sourceType: SourceType,
-    sources: List[String]
+      sourceType: SourceType,
+      sources: List[String]
   ): RIO[Sttp & DataSource & Config, List[Podcast.Model]] =
     sourceType match {
       case SourceType.YouTube =>
@@ -101,7 +101,7 @@ object PodcastController {
     }
 
   def checkForUpdatesAll(
-    downloadQueue: Queue[CreateEpisodeRequest]
+      downloadQueue: Queue[CreateEpisodeRequest]
   ): RIO[Sttp & DataSource & Config, Unit] =
     for {
       podcasts        <- PodcastDao.list
@@ -112,7 +112,7 @@ object PodcastController {
     } yield ()
 
   def checkForUpdates(
-    downloadQueue: Queue[CreateEpisodeRequest]
+      downloadQueue: Queue[CreateEpisodeRequest]
   )(id: PodcastId): RIO[Sttp & DataSource & Config, Unit] =
     for {
       podcast         <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
@@ -121,8 +121,8 @@ object PodcastController {
     } yield ()
 
   private def enqueueDownload(downloadQueue: Queue[CreateEpisodeRequest])(
-    podcast: Podcast.Model,
-    excludeExternalSources: Set[String]
+      podcast: Podcast.Model,
+      excludeExternalSources: Set[String]
   ): RIO[Sttp & Config, Unit] =
     podcast.sourceType match {
       case SourceType.YouTube   => enqueueDownloadYouTube(downloadQueue)(podcast, excludeExternalSources)
@@ -130,7 +130,7 @@ object PodcastController {
     }
 
   private def enqueueDownloadFile(
-    downloadQueue: Queue[CreateEpisodeRequest]
+      downloadQueue: Queue[CreateEpisodeRequest]
   )(podcast: Podcast.Model, excludeExternalSources: Set[String]): RIO[Any, Unit] = {
     import podpodge.util.FileExtensions.*
 
@@ -154,10 +154,10 @@ object PodcastController {
   }
 
   private def enqueueDownloadYouTube(
-    downloadQueue: Queue[CreateEpisodeRequest]
+      downloadQueue: Queue[CreateEpisodeRequest]
   )(
-    podcast: Podcast.Model,
-    excludeExternalSources: Set[String]
+      podcast: Podcast.Model,
+      excludeExternalSources: Set[String]
   ): RIO[Sttp & Config, Unit] = for {
     youTubeApiKey <- config.youTubeApiKey
     result <- // TODO: Update lastCheckDate here. Will definitely need it for the cron schedule feature.

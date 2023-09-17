@@ -14,20 +14,20 @@ import java.time.{Instant, OffsetDateTime, ZoneOffset}
 import scala.util.Try
 
 final case class Podcast[ID](
-  id: ID,
-  externalSource: String,
-  sourceType: SourceType,
-  title: String,
-  description: String,
-  category: String,
-  generator: String,
-  lastBuildDate: OffsetDateTime,
-  publishDate: OffsetDateTime,
-  author: String,
-  subtitle: String,
-  summary: String,
-  image: Option[String],
-  lastCheckDate: Option[OffsetDateTime]
+    id: ID,
+    externalSource: String,
+    sourceType: SourceType,
+    title: String,
+    description: String,
+    category: String,
+    generator: String,
+    lastBuildDate: OffsetDateTime,
+    publishDate: OffsetDateTime,
+    author: String,
+    subtitle: String,
+    summary: String,
+    image: Option[String],
+    lastCheckDate: Option[OffsetDateTime]
 ) {
 
   def imagePath: Option[Path] =

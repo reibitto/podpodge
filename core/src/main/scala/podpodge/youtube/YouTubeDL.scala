@@ -11,9 +11,9 @@ import java.nio.file.Files
 object YouTubeDL {
 
   def download(
-    podcastId: PodcastId,
-    videoId: String,
-    downloaderPathOpt: Option[DownloaderPath]
+      podcastId: PodcastId,
+      videoId: String,
+      downloaderPathOpt: Option[DownloaderPath]
   ): Task[File] = {
     // TODO: Support other audio formats in the future. Note that `EpisodeController` and so on
     // will have to be updated as well since "mp3" is hardcoded there.

@@ -25,33 +25,33 @@ trait TapirSupport {
   implicit def stringNewtypeValidator[T <: RichNewtype[String]#Type]: Validator[T] = Validator.pass
 
   implicit def stringNewtypeCodec[T <: RichNewtype[String]#Type](implicit
-    equiv: Equivalence[String, T]
+      equiv: Equivalence[String, T]
   ): Codec[String, T, CodecFormat.TextPlain] =
     Codec.string.map(RichNewtype.wrap(_))(RichNewtype.unwrap(_))
 
   implicit def intNewtypeSchema[T <: RichNewtype[Int]#Type]: Schema[T] = Schema(SchemaType.SInteger())
 
   implicit def intNewtypeValidator[T <: RichNewtype[Int]#Type](implicit
-    equiv: Equivalence[Int, T]
+      equiv: Equivalence[Int, T]
   ): Validator[T] =
     // TODO: Is it possible to include Newtype.assertion validation here?
     Validator.min(1L).contramap(RichNewtype.unwrap(_))
 
   implicit def intNewtypeCodec[T <: RichNewtype[Int]#Type](implicit
-    equiv: Equivalence[Int, T]
+      equiv: Equivalence[Int, T]
   ): Codec[String, T, CodecFormat.TextPlain] =
     Codec.int.map(RichNewtype.wrap(_))(RichNewtype.unwrap(_))
 
   implicit def longNewtypeSchema[T <: RichNewtype[Long]#Type]: Schema[T] = Schema(SchemaType.SInteger())
 
   implicit def longNewtypeValidator[T <: RichNewtype[Long]#Type](implicit
-    equiv: Equivalence[Long, T]
+      equiv: Equivalence[Long, T]
   ): Validator[T] =
     // TODO: Is it possible to include Newtype.assertion validation here?
     Validator.min(1L).contramap(RichNewtype.unwrap(_))
 
   implicit def longNewtypeCodec[T <: RichNewtype[Long]#Type](implicit
-    equiv: Equivalence[Long, T]
+      equiv: Equivalence[Long, T]
   ): Codec[String, T, CodecFormat.TextPlain] =
     Codec.long.map(RichNewtype.wrap(_))(RichNewtype.unwrap(_))
 
@@ -61,7 +61,7 @@ trait TapirSupport {
   implicit class RichZIOAkkaHttpEndpoint[I, O](endpoint: Endpoint[Unit, I, ApiError, O, AkkaStreams]) {
 
     def toZRoute(
-      logic: I => ZIO[Env, Throwable, O]
+        logic: I => ZIO[Env, Throwable, O]
     )(implicit interpreter: AkkaHttpServerInterpreter, runtime: Runtime[Env]): Route =
       interpreter.toRoute(endpoint.serverLogic { in =>
         Unsafe.unsafe { implicit u =>

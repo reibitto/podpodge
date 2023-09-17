@@ -29,7 +29,7 @@ object DownloadWorker {
       }
 
   def createEpisodeYouTube(
-    request: CreateEpisodeRequest.YouTube
+      request: CreateEpisodeRequest.YouTube
   ): ZIO[Sttp & DataSource, Throwable, Unit] = {
     val videoId = request.playlistItem.snippet.resourceId.videoId
 
@@ -70,7 +70,7 @@ object DownloadWorker {
   }
 
   def createEpisodeFile(
-    request: CreateEpisodeRequest.File
+      request: CreateEpisodeRequest.File
   ): RIO[Sttp & DataSource, Unit] =
     for {
       _ <- EpisodeDao.create(

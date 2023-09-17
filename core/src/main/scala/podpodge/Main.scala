@@ -12,18 +12,21 @@ object Main extends ZIOApp {
 
   val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
 
-  override def bootstrap: ZLayer[Scope, Any, Environment] = ZLayer.make[Environment](
-    SttpLive.make,
-    Quill.DataSource.fromPrefix("ctx"),
-    Config.live,
-    Runtime.removeDefaultLoggers >>> PodpodgeLogging.default
-  )
+  override def bootstrap: ZLayer[ZIOAppArgs, Any, Environment] =
+    ZLayer.fromZIO(
+      StaticConfig.ensureDirectoriesExist *>
+        DbMigration.migrate
+    ) >>>
+      ZLayer.make[Environment](
+        SttpLive.make,
+        Quill.DataSource.fromPrefix("ctx"),
+        Config.live,
+        Runtime.removeDefaultLoggers >>> PodpodgeLogging.default
+      )
 
   def run: ZIO[Env & ZIOAppArgs & Scope, Throwable, Unit] =
     for {
-      _ <- DbMigration.migrate.orDie
-      _ <- ZIO.scoped {
-             PodpodgeServer.make *> ZIO.never
-           }
+      _ <- PodpodgeServer.make
+      _ <- ZIO.never
     } yield ()
 }

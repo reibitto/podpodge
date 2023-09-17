@@ -27,7 +27,7 @@ object PodcastDao extends SqlDao {
     }.map(id => podcast.copy(id = id)) // TODO: Abstract this out
 
   def createAll(
-    podcasts: List[Podcast.Insert]
+      podcasts: List[Podcast.Insert]
   ): ZIO[DataSource, SQLException, List[Podcast[PodcastId]]] =
     ctx.run {
       liftQuery(podcasts.map(_.copy(id = PodcastId(0)))).foreach(e =>

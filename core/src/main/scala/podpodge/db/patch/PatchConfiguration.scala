@@ -5,11 +5,11 @@ import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import podpodge.types.{DownloaderPath, ServerHost, ServerPort, ServerScheme, Tristate, YouTubeApiKey}
 
 final case class PatchConfiguration(
-  youTubeApiKey: Tristate[YouTubeApiKey] = Tristate.None,
-  serverHost: Tristate[ServerHost] = Tristate.None,
-  serverPort: Tristate[ServerPort] = Tristate.None,
-  serverScheme: Tristate[ServerScheme] = Tristate.None,
-  downloaderPath: Tristate[DownloaderPath] = Tristate.None
+    youTubeApiKey: Tristate[YouTubeApiKey] = Tristate.None,
+    serverHost: Tristate[ServerHost] = Tristate.None,
+    serverPort: Tristate[ServerPort] = Tristate.None,
+    serverScheme: Tristate[ServerScheme] = Tristate.None,
+    downloaderPath: Tristate[DownloaderPath] = Tristate.None
 )
 
 object PatchConfiguration {

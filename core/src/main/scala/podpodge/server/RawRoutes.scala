@@ -19,7 +19,7 @@ object RawRoutes {
   val EpisodeIdPart: PathMatcher1[EpisodeId] = LongNumber.map(EpisodeId(_))
 
   def all(
-    episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]
+      episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]
   )(implicit runtime: Runtime[Env]): Route =
     pathSingleSlash {
       redirect("/docs", StatusCodes.TemporaryRedirect)

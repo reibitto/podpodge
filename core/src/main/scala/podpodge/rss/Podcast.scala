@@ -7,18 +7,18 @@ import sttp.model.Uri
 import java.time.OffsetDateTime
 
 final case class Podcast(
-  title: String,
-  linkUrl: Uri,
-  description: String,
-  category: String,
-  generator: String,
-  lastBuildDate: OffsetDateTime,
-  publishDate: OffsetDateTime,
-  author: String,
-  subtitle: String,
-  summary: String,
-  imageUrl: Uri,
-  items: List[Episode]
+    title: String,
+    linkUrl: Uri,
+    description: String,
+    category: String,
+    generator: String,
+    lastBuildDate: OffsetDateTime,
+    publishDate: OffsetDateTime,
+    author: String,
+    subtitle: String,
+    summary: String,
+    imageUrl: Uri,
+    items: List[Episode]
 )
 
 object Podcast {

@@ -11,8 +11,8 @@ import zio.Chunk
 object YouTubeClient {
 
   def listPlaylists(
-    ids: Seq[String],
-    youTubeApiKey: YouTubeApiKey
+      ids: Seq[String],
+      youTubeApiKey: YouTubeApiKey
   ): ZStream[Sttp, Throwable, Playlist] =
     ZStream.paginateChunkZIO(Option.empty[String]) { pageToken =>
       val request = basicRequest
@@ -35,8 +35,8 @@ object YouTubeClient {
     }
 
   def listPlaylistItems(
-    playlistId: String,
-    youTubeApiKey: YouTubeApiKey
+      playlistId: String,
+      youTubeApiKey: YouTubeApiKey
   ): ZStream[Sttp, Throwable, PlaylistItem] =
     ZStream
       .paginateChunkZIO(Option.empty[String]) { pageToken =>

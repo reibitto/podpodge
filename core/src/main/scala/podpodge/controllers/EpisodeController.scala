@@ -39,7 +39,7 @@ object EpisodeController {
     )
 
   def getEpisodeFileOnDemand(
-    episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]
+      episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]
   )(id: EpisodeId): RIO[DataSource, HttpEntity.Default] =
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
@@ -63,7 +63,7 @@ object EpisodeController {
     } yield result
 
   def getEpisodeFileOnDemandYouTube(
-    episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]
+      episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]
   )(episode: Episode.Model): RIO[DataSource, HttpEntity.Default] =
     for {
       config <- ConfigurationDao.getPrimary

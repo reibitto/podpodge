@@ -6,9 +6,9 @@ import io.circe.Decoder
 import java.time.OffsetDateTime
 
 final case class PlaylistItemListResponse(
-  items: List[PlaylistItem],
-  nextPageToken: Option[String],
-  pageInfo: PageInfo
+    items: List[PlaylistItem],
+    nextPageToken: Option[String],
+    pageInfo: PageInfo
 )
 
 object PlaylistItemListResponse {
@@ -24,14 +24,14 @@ object PlaylistItem {
 }
 
 final case class PlaylistItemSnippet(
-  publishedAt: OffsetDateTime,
-  channelId: String,
-  title: String,
-  description: String,
-  thumbnails: Thumbnails,
-  channelTitle: String,
-  playlistId: String,
-  resourceId: ResourceId
+    publishedAt: OffsetDateTime,
+    channelId: String,
+    title: String,
+    description: String,
+    thumbnails: Thumbnails,
+    channelTitle: String,
+    playlistId: String,
+    resourceId: ResourceId
 )
 
 object PlaylistItemSnippet {
@@ -39,11 +39,11 @@ object PlaylistItemSnippet {
 }
 
 final case class Thumbnails(
-  default: Option[Thumbnail],
-  medium: Option[Thumbnail],
-  high: Option[Thumbnail],
-  standard: Option[Thumbnail],
-  maxres: Option[Thumbnail]
+    default: Option[Thumbnail],
+    medium: Option[Thumbnail],
+    high: Option[Thumbnail],
+    standard: Option[Thumbnail],
+    maxres: Option[Thumbnail]
 ) {
   def highestRes: Option[Thumbnail] = maxres.orElse(high).orElse(standard).orElse(medium).orElse(default)
 }
