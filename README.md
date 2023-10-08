@@ -1,6 +1,6 @@
 # Podpodge
 
-![Scala CI](https://github.com/reibitto/podpodge/workflows/Scala%20CI/badge.svg)
+![Scala CI](https://github.com/reibitto/podpodge/actions/workflows/scala.yml/badge.svg)
 
 ## What is it?
 
