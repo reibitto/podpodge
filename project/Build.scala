@@ -68,9 +68,9 @@ object Build {
   }
 
   /** Uses more lenient rules for local development so that warnings for unused
-   * imports and so on doesn't get in your way when code is still a work in
-   * progress. CI has all the strict rules enabled.
-   */
+    * imports and so on doesn't get in your way when code is still a work in
+    * progress. CI has all the strict rules enabled.
+    */
   lazy val lenientDevEnabled: Boolean = compilerFlag("scalac.lenientDev.enabled", true)
 
 }
