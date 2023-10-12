@@ -7,7 +7,7 @@
 Podpodge is a server + client for converting YouTube playlists (or plain audio files in a directory) into audio-only RSS
 feeds that podcast apps can consume.
 
-Podpodge is written using [akka-http](https://doc.akka.io/docs/akka-http/current/index.html) +
+Podpodge is written using [pekko-http](https://pekko.apache.org/docs/pekko-http/current/) +
 [tapir](https://tapir.softwaremill.com) + [ZIO](https://zio.dev) + [Quill](https://getquill.io/). It's still a work in
 progress in the sense that it doesn't have the nicest front-end yet (a Scala.js + [Slinky](https://slinky.dev/)
 front-end will be coming). Though it does have built-in Swagger integration so that you don't have to construct the API
@@ -46,6 +46,6 @@ http://localhost:8080/podcast/1/rss
 ## Contributing
 
 Podpodge is fairly barebones and I mainly made it for myself because similar apps I tried at the time didn't quite work for me.
-Plus, this was an exercise to learn how akka-http + ZIO + Quill (and eventually Slinky) work together. There are a bunch
+Plus, this was an exercise to learn how akka-http/pekko-http + ZIO + Quill (and eventually Slinky) work together. There are a bunch
 more features that could potentially be added and I created some issues for those. Feel free to take any if you'd like.
 Contributions are always welcome! 

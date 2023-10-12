@@ -1,16 +1,16 @@
 package podpodge.server
 
-import akka.http.scaladsl.server.Route
+import org.apache.pekko.http.scaladsl.server.Route
 import podpodge.http.ApiError
 import podpodge.types.*
 import podpodge.Env
-import sttp.capabilities.akka.AkkaStreams
+import sttp.capabilities.pekko.PekkoStreams
 import sttp.capabilities.WebSockets
 import sttp.model.{MediaType, StatusCode}
 import sttp.tapir.{oneOf, oneOfVariant, Codec, CodecFormat, Endpoint, EndpointOutput, Schema, SchemaType, Validator}
 import sttp.tapir.generic.auto.schemaForCaseClass
 import sttp.tapir.json.circe.jsonBody
-import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
+import sttp.tapir.server.pekkohttp.PekkoHttpServerInterpreter
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.Codec.PlainCodec
 import zio.{Cause, Runtime, Unsafe, ZIO}
@@ -58,11 +58,11 @@ trait TapirSupport {
   implicit val xmlCodec: Codec[String, Elem, CodecFormat.Xml] =
     implicitly[PlainCodec[String]].map(XML.loadString(_))(_.toString).format(CodecFormat.Xml())
 
-  implicit class RichZIOAkkaHttpEndpoint[I, O](endpoint: Endpoint[Unit, I, ApiError, O, AkkaStreams]) {
+  implicit class RichZIOPekkoHttpEndpoint[I, O](endpoint: Endpoint[Unit, I, ApiError, O, PekkoStreams]) {
 
     def toZRoute(
         logic: I => ZIO[Env, Throwable, O]
-    )(implicit interpreter: AkkaHttpServerInterpreter, runtime: Runtime[Env]): Route =
+    )(implicit interpreter: PekkoHttpServerInterpreter, runtime: Runtime[Env]): Route =
       interpreter.toRoute(endpoint.serverLogic { in =>
         Unsafe.unsafe { implicit u =>
           runtime.unsafe.runToFuture {
@@ -78,7 +78,7 @@ trait TapirSupport {
               )
           }
         }
-      }: ServerEndpoint[AkkaStreams & WebSockets, Future])
+      }: ServerEndpoint[PekkoStreams & WebSockets, Future])
 
   }
 

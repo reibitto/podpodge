@@ -1,10 +1,10 @@
 package podpodge.controllers
 
-import akka.http.scaladsl.model.{HttpEntity, MediaType, StatusCodes}
-import akka.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
-import akka.stream.scaladsl.{FileIO, Source, StreamConverters}
-import akka.stream.IOResult
-import akka.util.ByteString
+import org.apache.pekko.http.scaladsl.model.{HttpEntity, MediaType, StatusCodes}
+import org.apache.pekko.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
+import org.apache.pekko.stream.scaladsl.{FileIO, Source, StreamConverters}
+import org.apache.pekko.stream.IOResult
+import org.apache.pekko.util.ByteString
 import podpodge.db.dao.{ConfigurationDao, EpisodeDao, PodcastDao}
 import podpodge.db.Episode
 import podpodge.http.HttpError
