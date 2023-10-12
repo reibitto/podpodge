@@ -4,8 +4,7 @@ import io.getquill.{MappedEncoding, SnakeCase, SqliteZioJdbcContext}
 import podpodge.types.*
 import zio.prelude.Equivalence
 
-import java.time.{Duration, OffsetDateTime}
-import java.time.format.DateTimeFormatter
+import java.time.Duration
 
 trait SqlDao extends MappedEncodings {
   val ctx: SqliteZioJdbcContext[SnakeCase.type] = SqlDao.ctx
@@ -16,12 +15,6 @@ object SqlDao {
 }
 
 trait MappedEncodings {
-
-  implicit val offsetDateTimeEncoder: MappedEncoding[OffsetDateTime, String] =
-    MappedEncoding[OffsetDateTime, String](_.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
-
-  implicit val offsetDateTimeDecoder: MappedEncoding[String, OffsetDateTime] =
-    MappedEncoding[String, OffsetDateTime](s => OffsetDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME))
 
   implicit val durationEncoder: MappedEncoding[Duration, String] =
     MappedEncoding[Duration, String](_.toString)
