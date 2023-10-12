@@ -12,16 +12,28 @@ trait SqlDao extends MappedEncodings {
 }
 
 object SqlDao {
-  lazy val ctx: SqliteZioJdbcContext[SnakeCase.type] = new SqliteZioJdbcContext(SnakeCase)
+
+  lazy val ctx: SqliteZioJdbcContext[SnakeCase.type] = new SqliteZioJdbcContext(SnakeCase) {
+
+    implicit override val offsetDateTimeDecoder: Decoder[OffsetDateTime] = {
+      val mapped = MappedEncoding[String, OffsetDateTime] { s =>
+        OffsetDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+      }
+
+      JdbcDecoder(mappedBaseDecoder(mapped, stringDecoder.decoder))
+    }
+
+    implicit override val offsetDateTimeEncoder: Encoder[OffsetDateTime] = {
+      val mapped = MappedEncoding[OffsetDateTime, String] { dt =>
+        dt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+      }
+
+      JdbcEncoder(stringEncoder.sqlType, mappedBaseEncoder(mapped, stringEncoder.encoder))
+    }
+  }
 }
 
 trait MappedEncodings {
-
-  implicit val offsetDateTimeEncoder: MappedEncoding[OffsetDateTime, String] =
-    MappedEncoding[OffsetDateTime, String](_.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
-
-  implicit val offsetDateTimeDecoder: MappedEncoding[String, OffsetDateTime] =
-    MappedEncoding[String, OffsetDateTime](s => OffsetDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME))
 
   implicit val durationEncoder: MappedEncoding[Duration, String] =
     MappedEncoding[Duration, String](_.toString)
