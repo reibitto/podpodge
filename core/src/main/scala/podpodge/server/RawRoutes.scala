@@ -1,10 +1,10 @@
 package podpodge.server
 
-import akka.http.scaladsl.model.*
-import akka.http.scaladsl.server.{PathMatcher1, Route}
-import akka.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.http.scaladsl.server.{PathMatcher1, Route}
+import org.apache.pekko.http.scaladsl.server.Directives.*
 import podpodge.controllers.EpisodeController
-import podpodge.http.AkkaHttp.*
+import podpodge.http.PekkoHttp.*
 import podpodge.types.{EpisodeId, PodcastId}
 import podpodge.Env
 import zio.{Promise, Ref, Runtime}
@@ -12,7 +12,7 @@ import zio.{Promise, Ref, Runtime}
 import java.io.File
 import scala.concurrent.duration.*
 
-// Routes that are using plain akka-http rather than through tapir's interface.
+// Routes that are using plain pekko-http rather than through tapir's interface.
 object RawRoutes {
 
   val PodcastIdPart: PathMatcher1[PodcastId] = LongNumber.map(PodcastId(_))

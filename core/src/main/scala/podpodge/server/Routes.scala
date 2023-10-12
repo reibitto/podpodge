@@ -1,6 +1,6 @@
 package podpodge.server
 
-import akka.http.scaladsl.server.Route
+import org.apache.pekko.http.scaladsl.server.Route
 import podpodge.{CreateEpisodeRequest, Env}
 import podpodge.controllers.{ConfigurationController, EpisodeController, PodcastController}
 import podpodge.db.{Configuration, Podcast}
@@ -9,13 +9,13 @@ import podpodge.db.patch.PatchConfiguration
 import podpodge.db.Podcast.Model
 import podpodge.http.ApiError
 import podpodge.types.*
-import sttp.capabilities.akka.AkkaStreams
+import sttp.capabilities.pekko.PekkoStreams
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.codec.enumeratum.TapirCodecEnumeratum
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.circe.*
-import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
+import sttp.tapir.server.pekkohttp.PekkoHttpServerInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import zio.{Promise, Queue, Ref, Runtime}
 
@@ -99,22 +99,22 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
     endpoint.get
       .in("cover" / path[PodcastId]("podcastId"))
       .errorOut(apiError)
-      .out(streamBinaryBody(AkkaStreams)(imageJpegCodec))
+      .out(streamBinaryBody(PekkoStreams)(imageJpegCodec))
 
   val thumbnailEndpoint =
     endpoint.get
       .in("thumbnail" / path[EpisodeId]("episodeId"))
       .errorOut(apiError)
-      .out(streamBinaryBody(AkkaStreams)(imageJpegCodec))
+      .out(streamBinaryBody(PekkoStreams)(imageJpegCodec))
 
   def make(
       downloadQueue: Queue[CreateEpisodeRequest],
       episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]
   )(implicit runtime: Runtime[Env]): Route = {
-    import akka.http.scaladsl.server.Directives.*
+    import org.apache.pekko.http.scaladsl.server.Directives.*
 
-    implicit val interpreter: AkkaHttpServerInterpreter =
-      AkkaHttpServerInterpreter()(scala.concurrent.ExecutionContext.Implicits.global)
+    implicit val interpreter: PekkoHttpServerInterpreter =
+      PekkoHttpServerInterpreter()(scala.concurrent.ExecutionContext.Implicits.global)
 
     listPodcastsEndpoint.toZRoute(_ => PodcastController.listPodcasts) ~
       getPodcastEndpoint.toZRoute(PodcastController.getPodcast) ~
@@ -135,7 +135,7 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
       swaggerRoute
   }
 
-  def swaggerRoute(implicit interpreter: AkkaHttpServerInterpreter) =
+  def swaggerRoute(implicit interpreter: PekkoHttpServerInterpreter) =
     interpreter.toRoute(
       SwaggerInterpreter().fromEndpoints[Future](
         List(
