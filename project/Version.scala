@@ -21,7 +21,7 @@ object V {
 
   val tapir = "1.7.6"
 
-  val zio = "2.0.18"
+  val zio = "2.0.19"
 
   val zioLogging = "2.1.14"
 
