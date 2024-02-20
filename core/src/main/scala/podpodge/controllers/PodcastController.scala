@@ -65,13 +65,14 @@ object PodcastController {
         for {
           youTubeApiKey <- config.youTubeApiKey
           playlists     <- YouTubeClient.listPlaylists(sources, youTubeApiKey).runCollect
-          _ <- ZIO.when(playlists.isEmpty) {
-                 ZIO.fail(
-                   ApiError.BadRequest(
-                     "No playlists found. Are you sure you marked them as unlisted or public rather than private? Currently private playlists are not supported."
-                   )
-                 )
-               }
+          _ <-
+            ZIO.when(playlists.isEmpty) {
+              ZIO.fail(
+                ApiError.BadRequest(
+                  "No playlists found. Are you sure you marked them as unlisted or public rather than private? Currently private playlists are not supported."
+                )
+              )
+            }
           podcasts <- PodcastDao.createAll(playlists.toList.map(Podcast.fromPlaylist))
           podcastsWithPlaylists = podcasts.zip(playlists)
           _ <- ZIO.foreachDiscard(podcastsWithPlaylists) { case (podcast, playlist) =>
