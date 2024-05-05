@@ -17,7 +17,7 @@ object V {
 
   val sqliteJdbc = "3.41.0.0"
 
-  val sttp = "3.9.1"
+  val sttp = "3.9.6"
 
   val tapir = "1.9.4"
 
