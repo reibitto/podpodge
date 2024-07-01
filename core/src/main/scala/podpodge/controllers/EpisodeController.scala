@@ -1,16 +1,22 @@
 package podpodge.controllers
 
-import org.apache.pekko.http.scaladsl.model.{HttpEntity, MediaType, StatusCodes}
+import org.apache.pekko.http.scaladsl.model.HttpEntity
+import org.apache.pekko.http.scaladsl.model.MediaType
+import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
-import org.apache.pekko.stream.scaladsl.{FileIO, Source, StreamConverters}
 import org.apache.pekko.stream.IOResult
+import org.apache.pekko.stream.scaladsl.FileIO
+import org.apache.pekko.stream.scaladsl.Source
+import org.apache.pekko.stream.scaladsl.StreamConverters
 import org.apache.pekko.util.ByteString
-import podpodge.db.dao.{ConfigurationDao, EpisodeDao, PodcastDao}
+import podpodge.StaticConfig
 import podpodge.db.Episode
+import podpodge.db.dao.ConfigurationDao
+import podpodge.db.dao.EpisodeDao
+import podpodge.db.dao.PodcastDao
 import podpodge.http.HttpError
 import podpodge.types.*
 import podpodge.youtube.YouTubeDL
-import podpodge.StaticConfig
 import zio.*
 
 import java.io.File
@@ -51,14 +57,18 @@ object EpisodeController {
 
                   case SourceType.Directory =>
                     val mediaPath = Paths.get(episode.externalSource)
+                    val mediaFile = mediaPath.toFile
 
-                    ZIO.succeed(
-                      HttpEntity.Default(
-                        MediaType.audio("mpeg", MediaType.NotCompressible, "mp3"),
-                        mediaPath.toFile.length,
-                        FileIO.fromPath(mediaPath)
+                    if (!mediaFile.exists() || mediaFile.length == 0)
+                      ZIO.fail(HttpError(StatusCodes.NotFound))
+                    else
+                      ZIO.succeed(
+                        HttpEntity.Default(
+                          MediaType.audio("mpeg", MediaType.NotCompressible, "mp3"),
+                          mediaFile.length,
+                          FileIO.fromPath(mediaPath)
+                        )
                       )
-                    )
                 }
     } yield result
 
@@ -86,6 +96,9 @@ object EpisodeController {
                     }
       mediaFile <- promiseMap(episode.id).await
       _         <- EpisodeDao.updateMediaFile(episode.id, Some(mediaFile.getName))
+      _ <- ZIO.when(mediaFile.length == 0) {
+             ZIO.fail(HttpError(StatusCodes.NotFound))
+           }
     } yield HttpEntity.Default(
       MediaType.audio("mpeg", MediaType.NotCompressible, "mp3"),
       mediaFile.length,
