@@ -12,7 +12,7 @@ object DbMigration {
       val flyway = Flyway
         .configure()
         .dataSource("jdbc:sqlite:data/podpodge.db", "", "")
-        .locations("filesystem:migration")
+        .locations("filesystem:data/migration")
         .load()
 
       flyway.migrate()

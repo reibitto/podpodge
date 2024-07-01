@@ -59,8 +59,9 @@ lazy val core = module("podpodge", Some("core"))
       "org.xerial" % "sqlite-jdbc" % V.sqliteJdbc,
       "org.flywaydb" % "flyway-core" % V.flyway,
       "org.slf4j" % "slf4j-nop" % V.slf4j
-    )
-  )
+    ),
+    packResourceDir += (new File("data/migration") -> "data/migration")
+  ).enablePlugins(PackPlugin)
 
 def module(projectId: String, moduleFile: Option[String] = None): Project =
   Project(id = projectId, base = file(moduleFile.getOrElse(projectId)))
