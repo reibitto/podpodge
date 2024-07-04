@@ -3,7 +3,7 @@ object V {
 
   val pekkoHttp = "1.0.0"
 
-  val circe = "0.14.6"
+  val circe = "0.14.9"
 
   val enumeratum = "1.7.3"
 
