@@ -5,7 +5,7 @@ object V {
 
   val circe = "0.14.6"
 
-  val enumeratum = "1.7.3"
+  val enumeratum = "1.7.4"
 
   val flyway = "9.16.0"
 
