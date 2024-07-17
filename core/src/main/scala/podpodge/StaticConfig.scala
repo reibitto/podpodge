@@ -1,6 +1,6 @@
 package podpodge
 
-import zio.{Task, ZIO}
+import zio.*
 
 import java.nio.file.{Files, Path, Paths}
 

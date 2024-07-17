@@ -7,10 +7,9 @@ import podpodge.controllers.EpisodeController
 import podpodge.http.PekkoHttp.*
 import podpodge.types.{EpisodeId, PodcastId}
 import podpodge.Env
-import zio.{Promise, Ref, Runtime}
+import zio.*
 
 import java.io.File
-import scala.concurrent.duration.*
 
 // Routes that are using plain pekko-http rather than through tapir's interface.
 object RawRoutes {
@@ -28,7 +27,7 @@ object RawRoutes {
         // TODO: Make this configurable.
         // The timeout is set to ridiculously long value because downloading a YouTube video can take a long time, and this
         // route can also initiate a download if the media file doesn't already exist.
-        withRequestTimeout(1.hour) {
+        withRequestTimeout(1.hour.asFiniteDuration) {
           withRangeSupport {
             get {
               EpisodeController.getEpisodeFileOnDemand(episodesDownloading)(id)

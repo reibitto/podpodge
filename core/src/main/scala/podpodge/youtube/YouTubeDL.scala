@@ -2,7 +2,7 @@ package podpodge.youtube
 
 import podpodge.types.*
 import podpodge.StaticConfig
-import zio.{Task, ZIO}
+import zio.*
 import zio.process.Command
 
 import java.io.File

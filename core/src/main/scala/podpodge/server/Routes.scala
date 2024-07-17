@@ -17,7 +17,7 @@ import sttp.tapir.generic.auto.*
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.pekkohttp.PekkoHttpServerInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
-import zio.{Promise, Queue, Ref, Runtime}
+import zio.*
 
 import java.io.File
 import scala.concurrent.Future

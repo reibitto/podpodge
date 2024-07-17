@@ -13,7 +13,7 @@ import sttp.tapir.json.circe.jsonBody
 import sttp.tapir.server.pekkohttp.PekkoHttpServerInterpreter
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.Codec.PlainCodec
-import zio.{Cause, Runtime, Unsafe, ZIO}
+import zio.*
 import zio.prelude.*
 
 import scala.concurrent.Future
