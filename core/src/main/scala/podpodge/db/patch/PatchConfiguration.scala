@@ -1,8 +1,8 @@
 package podpodge.db.patch
 
 import io.circe.{Decoder, Encoder}
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import podpodge.types.{DownloaderPath, ServerHost, ServerPort, ServerScheme, Tristate, YouTubeApiKey}
+import io.circe.generic.semiauto.deriveEncoder
+import podpodge.types.*
 
 final case class PatchConfiguration(
     youTubeApiKey: Tristate[YouTubeApiKey] = Tristate.None,
@@ -14,5 +14,21 @@ final case class PatchConfiguration(
 
 object PatchConfiguration {
   implicit val encoder: Encoder[PatchConfiguration] = deriveEncoder[PatchConfiguration]
-  implicit val decoder: Decoder[PatchConfiguration] = deriveDecoder[PatchConfiguration]
+
+  implicit val decoder: Decoder[PatchConfiguration] =
+    Decoder.instance { c =>
+      for {
+        youTubeApiKey  <- c.get[Tristate[YouTubeApiKey]]("youTubeApiKey")
+        serverHost     <- c.get[Tristate[ServerHost]]("serverHost")
+        serverPort     <- c.get[Tristate[ServerPort]]("serverPort")
+        serverScheme   <- c.get[Tristate[ServerScheme]]("serverScheme")
+        downloaderPath <- c.get[Tristate[DownloaderPath]]("downloaderPath")
+      } yield PatchConfiguration(
+        youTubeApiKey,
+        serverHost,
+        serverPort,
+        serverScheme,
+        downloaderPath
+      )
+    }
 }
