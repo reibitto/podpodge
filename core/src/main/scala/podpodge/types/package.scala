@@ -49,6 +49,8 @@ package object types {
 
   object ServerHost extends RichNewtype[String] {
     val configKey: String = "PODPODGE_HOST"
+
+    def localhost: ServerHost = makeUnsafe("127.0.0.1")
   }
   type ServerHost = ServerHost.Type
 

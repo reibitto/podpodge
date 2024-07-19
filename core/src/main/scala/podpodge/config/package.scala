@@ -72,7 +72,13 @@ package object config {
       serverScheme: ServerScheme,
       downloaderPath: DownloaderPath
   ) {
-    val baseUri: Uri = Uri(serverScheme.unwrap, serverHost.unwrap, serverPort.unwrap)
+    def baseUri: Uri = Uri(serverScheme.unwrap, serverHost.unwrap, serverPort.unwrap)
+
+    def renderBaseUri: String =
+      if (serverPort.unwrap == 80)
+        s"$serverScheme://$serverHost"
+      else
+        baseUri.toString
   }
 
   def get: URIO[Config, PodpodgeConfig] = ZIO.service[PodpodgeConfig]
