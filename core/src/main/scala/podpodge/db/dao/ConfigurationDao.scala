@@ -18,17 +18,7 @@ object ConfigurationDao extends SqlDao {
                    }.map(_.headOption)
       config <- configOpt match {
                   case Some(config) => ZIO.succeed(config)
-                  case None =>
-                    create(
-                      Configuration(
-                        id = ConfigurationId.empty,
-                        youTubeApiKey = None,
-                        serverHost = None,
-                        serverPort = None,
-                        serverScheme = None,
-                        downloaderPath = None
-                      )
-                    )
+                  case None         => create(Configuration.empty)
                 }
     } yield config
 
@@ -66,7 +56,10 @@ object ConfigurationDao extends SqlDao {
                         serverHost = patch.serverHost.specify(originalConfig.serverHost),
                         serverPort = patch.serverPort.specify(originalConfig.serverPort),
                         serverScheme = patch.serverScheme.specify(originalConfig.serverScheme),
-                        downloaderPath = patch.downloaderPath.specify(originalConfig.downloaderPath)
+                        downloaderPath = patch.downloaderPath.specify(originalConfig.downloaderPath),
+                        openBrowser = patch.openBrowser.specify(originalConfig.openBrowser),
+                        autoCheckAllPodcastUpdates =
+                          patch.autoCheckAllPodcastUpdates.specify(originalConfig.autoCheckAllPodcastUpdates)
                       )
       _ <- update(patchedConfig)
     } yield patchedConfig

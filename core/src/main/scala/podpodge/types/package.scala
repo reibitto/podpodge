@@ -71,4 +71,14 @@ package object types {
   }
   type DownloaderPath = DownloaderPath.Type
 
+  object OpenBrowser extends RichNewtype[Boolean] {
+    val configKey: String = "PODPODGE_OPEN_BROWSER"
+  }
+  type OpenBrowser = OpenBrowser.Type
+
+  object AutoCheckAllPodcastUpdates extends RichNewtype[Boolean] {
+    val configKey: String = "PODPODGE_AUTO_CHECK_ALL_PODCAST_UPDATES"
+  }
+  type AutoCheckAllPodcastUpdates = AutoCheckAllPodcastUpdates.Type
+
 }

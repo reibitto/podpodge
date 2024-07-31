@@ -35,7 +35,7 @@ trait TapirSupport {
       equiv: Equivalence[Int, T]
   ): Validator[T] =
     // TODO: Is it possible to include Newtype.assertion validation here?
-    Validator.min(1L).contramap(RichNewtype.unwrap(_))
+    Validator.pass.contramap(RichNewtype.unwrap(_))
 
   implicit def intNewtypeCodec[T <: RichNewtype[Int]#Type](implicit
       equiv: Equivalence[Int, T]
@@ -48,12 +48,24 @@ trait TapirSupport {
       equiv: Equivalence[Long, T]
   ): Validator[T] =
     // TODO: Is it possible to include Newtype.assertion validation here?
-    Validator.min(1L).contramap(RichNewtype.unwrap(_))
+    Validator.pass.contramap(RichNewtype.unwrap(_))
 
   implicit def longNewtypeCodec[T <: RichNewtype[Long]#Type](implicit
       equiv: Equivalence[Long, T]
   ): Codec[String, T, CodecFormat.TextPlain] =
     Codec.long.map(RichNewtype.wrap(_))(RichNewtype.unwrap(_))
+
+  implicit def booleanNewtypeSchema[T <: RichNewtype[Boolean]#Type]: Schema[T] = Schema(SchemaType.SInteger())
+
+  implicit def booleanNewtypeValidator[T <: RichNewtype[Boolean]#Type](implicit
+      equiv: Equivalence[Boolean, T]
+  ): Validator[T] =
+    Validator.pass.contramap(RichNewtype.unwrap(_))
+
+  implicit def booleanNewtypeCodec[T <: RichNewtype[Boolean]#Type](implicit
+      equiv: Equivalence[Boolean, T]
+  ): Codec[String, T, CodecFormat.TextPlain] =
+    Codec.boolean.map(RichNewtype.wrap(_))(RichNewtype.unwrap(_))
 
   implicit val xmlCodec: Codec[String, Elem, CodecFormat.Xml] =
     implicitly[PlainCodec[String]].map(XML.loadString(_))(_.toString).format(CodecFormat.Xml())

@@ -55,12 +55,36 @@ package object config {
                 System.env(DownloaderPath.configKey).some.flatMap(s => ZIO.fromOption(DownloaderPath.make(s).toOption))
               )
               .orElseSucceed(DownloaderPath("youtube-dl"))
+          openBrowser <-
+            ZIO
+              .fromOption(dbConfig.openBrowser)
+              .orElse(
+                System
+                  .env(OpenBrowser.configKey)
+                  .some
+                  .flatMap(s => ZIO.fromOption(s.toBooleanOption.flatMap(b => OpenBrowser.make(b).toOption)))
+              )
+              .orElseSucceed(OpenBrowser(false))
+          autoCheckAllPodcastUpdates <-
+            ZIO
+              .fromOption(dbConfig.autoCheckAllPodcastUpdates)
+              .orElse(
+                System
+                  .env(AutoCheckAllPodcastUpdates.configKey)
+                  .some
+                  .flatMap(s =>
+                    ZIO.fromOption(s.toBooleanOption.flatMap(b => AutoCheckAllPodcastUpdates.make(b).toOption))
+                  )
+              )
+              .orElseSucceed(AutoCheckAllPodcastUpdates(true))
         } yield PodpodgeConfig(
           youTubeApiKey,
           serverHost,
           serverPort,
           serverScheme,
-          downloaderPath
+          downloaderPath,
+          openBrowser,
+          autoCheckAllPodcastUpdates
         )
       }
   }
@@ -70,7 +94,9 @@ package object config {
       serverHost: ServerHost,
       serverPort: ServerPort,
       serverScheme: ServerScheme,
-      downloaderPath: DownloaderPath
+      downloaderPath: DownloaderPath,
+      openBrowser: OpenBrowser,
+      autoCheckAllPodcastUpdates: AutoCheckAllPodcastUpdates
   ) {
     def baseUri: Uri = Uri(serverScheme.unwrap, serverHost.unwrap, serverPort.unwrap)
 

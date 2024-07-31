@@ -150,7 +150,7 @@ object PodcastController {
         ZIO.logTrace(s"Putting '$item' in download queue") *>
           downloadQueue.offer(CreateEpisodeRequest.File(podcast.id, item))
       }
-      .tap(_ => ZIO.logInfo(s"Done checking for new episode files for Podcast ${podcast.id}"))
+      .tap(_ => ZIO.logInfo(s"Done checking for new episode files for `${podcast.title}`"))
   }
 
   private def enqueueDownloadYouTube(
@@ -168,7 +168,7 @@ object PodcastController {
           ZIO.logTrace(s"Putting '${item.snippet.title}' (${item.snippet.resourceId.videoId}) in download queue") *>
             downloadQueue.offer(CreateEpisodeRequest.YouTube(podcast.id, item))
         }
-        .tap(_ => ZIO.logInfo(s"Done checking for new YouTube episodes for Podcast ${podcast.id}"))
+        .tap(_ => ZIO.logInfo(s"Done checking for new YouTube episodes for `${podcast.title}`"))
   } yield result
 
 }
