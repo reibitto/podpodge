@@ -15,11 +15,11 @@ object V {
 
   val slf4j = "2.0.13"
 
-  val sqliteJdbc = "3.46.0.0"
+  val sqliteJdbc = "3.46.0.1"
 
   val sttp = "3.9.7"
 
-  val tapir = "1.10.14"
+  val tapir = "1.11.0"
 
   val zio = "2.1.6"
 
