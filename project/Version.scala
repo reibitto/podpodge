@@ -7,13 +7,13 @@ object V {
 
   val enumeratum = "1.7.4"
 
-  val flyway = "10.16.0"
+  val flyway = "10.17.0"
 
   val quill = "4.8.4"
 
   val scalaXml = "2.3.0"
 
-  val slf4j = "2.0.13"
+  val slf4j = "2.0.14"
 
   val sqliteJdbc = "3.46.0.1"
 
@@ -21,11 +21,11 @@ object V {
 
   val tapir = "1.11.0"
 
-  val zio = "2.1.6"
+  val zio = "2.1.7"
 
   val zioLogging = "2.3.0"
 
-  val zioPrelude = "1.0.0-RC27"
+  val zioPrelude = "1.0.0-RC28"
 
   val zioProcess = "0.7.2"
 }

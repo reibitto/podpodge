@@ -1,6 +1,7 @@
-import sbt._
-import sbt.Keys._
-import sbtwelcome._
+import sbt.*
+import sbt.Keys.*
+import sbt.Package.ManifestAttributes
+import sbtwelcome.*
 
 lazy val root = project
   .in(file("."))
@@ -19,11 +20,14 @@ lazy val root = project
          |/_/    \\____/\\__,_/ .___/\\____/\\__,_/\\__, /\\___/
          |                 /_/                /____/
          |
+         |  ${version.value}
          |""".stripMargin,
     usefulTasks := Seq(
       UsefulTask("run", "Runs the Podpodge server"),
       UsefulTask("~podpodge/reStart", "Runs the Podpodge server with file-watch enabled"),
       UsefulTask("~compile", "Compile all modules with file-watch enabled"),
+      UsefulTask("podpodge/pack", "Create an executable package for running the Podpodge server"),
+      UsefulTask("podpodge/packArchiveZip", "Create a package for distribution"),
       UsefulTask("fmt", "Run scalafmt on the entire project")
     )
   )
@@ -59,8 +63,12 @@ lazy val core = module("podpodge", Some("core"))
       "org.xerial" % "sqlite-jdbc" % V.sqliteJdbc,
       "org.flywaydb" % "flyway-core" % V.flyway,
       "org.slf4j" % "slf4j-nop" % V.slf4j
-    )
-  )
+    ),
+    packMain := Map("podpodge" -> "podpodge.Main"),
+    packGenerateMakefile := false,
+    packTargetDir := file("./target"),
+    packResourceDir += (new File("data/migration") -> "data/migration")
+  ).enablePlugins(PackPlugin)
 
 def module(projectId: String, moduleFile: Option[String] = None): Project =
   Project(id = projectId, base = file(moduleFile.getOrElse(projectId)))
