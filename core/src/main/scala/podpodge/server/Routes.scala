@@ -123,12 +123,12 @@ object Routes extends TapirSupport with TapirCodecEnumeratum {
       checkForUpdatesEndpoint.toZRoute(PodcastController.checkForUpdates(downloadQueue)) ~
       createPodcastEndpoint.toZRoute((PodcastController.create _).tupled(_)) ~
       getConfigEndpoint.toZRoute(_ => ConfigurationController.getPrimary) ~
-      updateConfigEndpoint.toZRoute({ patch =>
+      updateConfigEndpoint.toZRoute(patch =>
         for {
           defaultConfiguration <- ConfigurationDao.getPrimary
           result               <- ConfigurationController.patch(defaultConfiguration.id, patch)
         } yield result
-      }) ~
+      ) ~
       coverEndpoint.toZRoute(PodcastController.getPodcastCover) ~
       thumbnailEndpoint.toZRoute(EpisodeController.getThumbnail) ~
       RawRoutes.all(episodesDownloading) ~
