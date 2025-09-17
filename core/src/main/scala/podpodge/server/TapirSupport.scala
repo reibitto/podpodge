@@ -70,7 +70,7 @@ trait TapirSupport {
               .foldZIO(
                 {
                   case e: ApiError => ZIO.left(e)
-                  case t =>
+                  case t           =>
                     ZIO.logErrorCause("Unhandled error occurred", Cause.die(t)) *>
                       ZIO.left(ApiError.InternalError("Internal server error"))
                 },
