@@ -26,7 +26,7 @@ object Tristate {
 
     final def apply(a: Tristate[A]): Json = a match {
       case Tristate.Some(v) => implicitly[Encoder[A]].apply(v)
-      case Tristate.None =>
+      case Tristate.None    =>
         Json.Null
       case Tristate.Unspecified =>
         // I want to specify `Json.Absent` or something like that here, but not sure if it's possible
