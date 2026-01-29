@@ -18,7 +18,7 @@ object ConfigurationDao extends SqlDao {
                    }.map(_.headOption)
       config <- configOpt match {
                   case Some(config) => ZIO.succeed(config)
-                  case None =>
+                  case None         =>
                     create(
                       Configuration(
                         id = ConfigurationId.empty,

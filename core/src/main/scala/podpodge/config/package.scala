@@ -16,7 +16,7 @@ package object config {
         // should use a config library here. Something like ciris, pureconfig, zio-config, etc. I haven't decided on one
         // yet.
         for {
-          dbConfig <- ConfigurationDao.getPrimary.orDie
+          dbConfig      <- ConfigurationDao.getPrimary.orDie
           youTubeApiKey <-
             ZIO
               .fromOption(dbConfig.youTubeApiKey)
