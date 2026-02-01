@@ -23,7 +23,7 @@ object EpisodeController {
   def getEpisodeFile(id: EpisodeId): RIO[DataSource, HttpEntity.Default] =
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
-      file <-
+      file    <-
         ZIO
           .succeed(
             StaticConfig.audioPath
@@ -45,7 +45,7 @@ object EpisodeController {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
       podcast <- PodcastDao.get(episode.podcastId).someOrFail(HttpError(StatusCodes.NotFound))
       _       <- ZIO.logInfo(s"Requested episode '${episode.title}' on demand")
-      result <- podcast.sourceType match {
+      result  <- podcast.sourceType match {
                   case SourceType.YouTube =>
                     getEpisodeFileOnDemandYouTube(episodesDownloading)(episode)
 
@@ -66,7 +66,7 @@ object EpisodeController {
       episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]
   )(episode: Episode.Model): RIO[DataSource, HttpEntity.Default] =
     for {
-      config <- ConfigurationDao.getPrimary
+      config     <- ConfigurationDao.getPrimary
       promiseMap <- episodesDownloading.updateAndGetZIO { downloadMap =>
                       downloadMap.get(episode.id) match {
                         case None =>
@@ -95,13 +95,13 @@ object EpisodeController {
   def getThumbnail(id: EpisodeId): RIO[DataSource, Source[ByteString, Future[IOResult]]] =
     for {
       episode <- EpisodeDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
-      result <- episode.imagePath.map(_.toFile) match {
+      result  <- episode.imagePath.map(_.toFile) match {
                   case Some(imageFile) if imageFile.exists() =>
                     ZIO.succeed(FileIO.fromPath(imageFile.toPath))
 
                   case _ =>
                     Option(getClass.getResource("/question.png")).flatMap(ResourceFile.apply) match {
-                      case None => ZIO.fail(HttpError(StatusCodes.InternalServerError))
+                      case None           => ZIO.fail(HttpError(StatusCodes.InternalServerError))
                       case Some(resource) =>
                         ZIO.succeed(StreamConverters.fromInputStream(() => resource.url.openStream()))
                     }
