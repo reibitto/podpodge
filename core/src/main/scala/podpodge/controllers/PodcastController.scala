@@ -43,13 +43,13 @@ object PodcastController {
   ): ZIO[DataSource, Exception, Source[ByteString, Future[IOResult]]] =
     for {
       podcast <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
-      result <- podcast.imagePath.map(_.toFile) match {
+      result  <- podcast.imagePath.map(_.toFile) match {
                   case Some(imageFile) if imageFile.exists() =>
                     ZIO.succeed(FileIO.fromPath(imageFile.toPath))
 
                   case _ =>
                     Option(getClass.getResource("/question.png")).flatMap(ResourceFile.apply) match {
-                      case None => ZIO.fail(HttpError(StatusCodes.InternalServerError))
+                      case None           => ZIO.fail(HttpError(StatusCodes.InternalServerError))
                       case Some(resource) =>
                         ZIO.succeed(StreamConverters.fromInputStream(() => resource.url.openStream()))
                     }
@@ -65,7 +65,7 @@ object PodcastController {
         for {
           youTubeApiKey <- config.youTubeApiKey
           playlists     <- YouTubeClient.listPlaylists(sources, youTubeApiKey).runCollect
-          _ <- ZIO.when(playlists.isEmpty) {
+          _             <- ZIO.when(playlists.isEmpty) {
                  ZIO.fail(
                    ApiError.BadRequest(
                      "No playlists found. Are you sure you marked them as unlisted or public rather than private? Currently private playlists are not supported."
@@ -80,7 +80,7 @@ object PodcastController {
                      uri <- ZIO.fromEither(Uri.parse(thumbnail.url)).catchAll(ZIO.dieMessage(_))
                      req = basicRequest.get(uri).response(asPath(StaticConfig.coversPath.resolve(s"${podcast.id}.jpg")))
                      downloadedThumbnail <- Sttp.send(req)
-                     _ <- ZIO.whenCase(downloadedThumbnail.body) { case Right(_) =>
+                     _                   <- ZIO.whenCase(downloadedThumbnail.body) { case Right(_) =>
                             PodcastDao.updateImage(podcast.id, Some(s"${podcast.id}.jpg"))
                           }
                    } yield ()
@@ -106,7 +106,7 @@ object PodcastController {
     for {
       podcasts        <- PodcastDao.list
       externalSources <- EpisodeDao.listExternalSource.map(_.toSet)
-      _ <- ZIO.foreachDiscard(podcasts) { podcast =>
+      _               <- ZIO.foreachDiscard(podcasts) { podcast =>
              enqueueDownload(downloadQueue)(podcast, externalSources)
            }
     } yield ()
@@ -160,7 +160,7 @@ object PodcastController {
       excludeExternalSources: Set[String]
   ): RIO[Sttp & Config, Unit] = for {
     youTubeApiKey <- config.youTubeApiKey
-    result <- // TODO: Update lastCheckDate here. Will definitely need it for the cron schedule feature.
+    result        <- // TODO: Update lastCheckDate here. Will definitely need it for the cron schedule feature.
       YouTubeClient
         .listPlaylistItems(podcast.externalSource, youTubeApiKey)
         .filterNot(item => excludeExternalSources.contains(item.snippet.resourceId.videoId))
