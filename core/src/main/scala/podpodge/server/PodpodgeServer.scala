@@ -20,7 +20,7 @@ object PodpodgeServer {
       _                   <- DownloadWorker.make(downloadQueue).forkDaemon
       episodesDownloading <- Ref.Synchronized.make(Map.empty[EpisodeId, Promise[Throwable, File]])
       runtime             <- ZIO.runtime[Env]
-      server <- ZIO.acquireRelease(
+      server              <- ZIO.acquireRelease(
                   ZIO.fromFuture { _ =>
                     Http()
                       .newServerAt(config.serverHost.unwrap, config.serverPort.unwrap)
