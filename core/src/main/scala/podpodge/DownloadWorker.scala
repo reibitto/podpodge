@@ -61,7 +61,7 @@ object DownloadWorker {
                        )
 
                downloadedThumbnail <- Sttp.send(req)
-               _ <- ZIO.whenCase(downloadedThumbnail.body) { case Right(_) =>
+               _                   <- ZIO.whenCase(downloadedThumbnail.body) { case Right(_) =>
                       EpisodeDao.updateImage(episode.id, Some(s"${episode.id}.jpg"))
                     }
              } yield ()
