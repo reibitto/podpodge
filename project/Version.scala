@@ -1,5 +1,5 @@
 object V {
-  val pekko = "1.0.3"
+  val pekko = "1.7.0"
 
   val pekkoHttp = "1.0.0"
 
