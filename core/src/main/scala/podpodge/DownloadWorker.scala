@@ -4,12 +4,13 @@ import podpodge.db.dao.EpisodeDao
 import podpodge.db.Episode
 import podpodge.http.Sttp
 import podpodge.types.*
+import podpodge.util.Ffprobe
 import sttp.client3.*
 import sttp.model.Uri
 import zio.*
 import zio.stream.ZStream
 
-import java.time.{Instant, ZoneOffset}
+import java.time.{Duration, Instant, ZoneOffset}
 import javax.sql.DataSource
 
 object DownloadWorker {
@@ -44,7 +45,7 @@ object DownloadWorker {
                      request.playlistItem.snippet.publishedAt, // TODO: Add config option to select `request.playlistItem.contentDetails.videoPublishedAt` here
                      None,
                      None,
-                     0.seconds // TODO: Calculate duration
+                     request.duration.getOrElse(Duration.ZERO)
                    )
                  )
       _ <- ZIO.foreachDiscard(request.playlistItem.snippet.thumbnails.highestRes) { thumbnail =>
@@ -73,6 +74,7 @@ object DownloadWorker {
       request: CreateEpisodeRequest.File
   ): RIO[Sttp & DataSource, Unit] =
     for {
+      duration <- Ffprobe.duration(request.file)
       _ <- EpisodeDao.create(
              Episode(
                EpisodeId.empty,
@@ -83,7 +85,7 @@ object DownloadWorker {
                Instant.ofEpochMilli(request.file.lastModified()).atOffset(ZoneOffset.UTC),
                None,
                None,
-               0.seconds // TODO: Calculate duration
+               duration.getOrElse(Duration.ZERO)
              )
            )
     } yield ()

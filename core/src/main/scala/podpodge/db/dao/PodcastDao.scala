@@ -6,6 +6,7 @@ import podpodge.types.PodcastId
 import zio.ZIO
 
 import java.sql.SQLException
+import java.time.OffsetDateTime
 import javax.sql.DataSource
 
 object PodcastDao extends SqlDao {
@@ -38,6 +39,11 @@ object PodcastDao extends SqlDao {
   def updateImage(id: PodcastId, s: Option[String]): ZIO[DataSource, SQLException, Long] =
     ctx.run {
       query[Podcast.Model].filter(_.id == lift(id)).update(_.image -> lift(s))
+    }
+
+  def updateLastCheckDate(id: PodcastId, date: OffsetDateTime): ZIO[DataSource, SQLException, Long] =
+    ctx.run {
+      query[Podcast.Model].filter(_.id == lift(id)).update(_.lastCheckDate -> lift(Option(date)))
     }
 
   def delete(id: PodcastId): ZIO[DataSource, SQLException, Long] =

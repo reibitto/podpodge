@@ -56,7 +56,9 @@ trait TapirSupport {
     Codec.long.map(RichNewtype.wrap(_))(RichNewtype.unwrap(_))
 
   implicit val xmlCodec: Codec[String, Elem, CodecFormat.Xml] =
-    implicitly[PlainCodec[String]].map(XML.loadString(_))(_.toString).format(CodecFormat.Xml())
+    implicitly[PlainCodec[String]]
+      .map(XML.loadString(_))(elem => "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + elem.toString)
+      .format(CodecFormat.Xml())
 
   implicit class RichZIOPekkoHttpEndpoint[I, O](endpoint: Endpoint[Unit, I, ApiError, O, PekkoStreams]) {
 

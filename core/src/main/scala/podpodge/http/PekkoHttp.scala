@@ -23,9 +23,10 @@ object PekkoHttp {
     }
 
     onComplete(asFuture) {
-      case Success(Right(value))               => complete(ToResponseMarshallable(value))
-      case Success(Left(ApiError.NotFound(_))) => complete(StatusCodes.NotFound)
-      case Success(Left(_)) | Failure(_)       => complete(StatusCodes.InternalServerError)
+      case Success(Right(value))                 => complete(ToResponseMarshallable(value))
+      case Success(Left(ApiError.NotFound(_)))   => complete(StatusCodes.NotFound)
+      case Success(Left(ApiError.BadRequest(_))) => complete(StatusCodes.BadRequest)
+      case Success(Left(_)) | Failure(_)         => complete(StatusCodes.InternalServerError)
     }
   }
 }

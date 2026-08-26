@@ -4,7 +4,7 @@ import Keys._
 import scala.Console
 
 object Build {
-  val ScalaVersion = "2.13.12"
+  val ScalaVersion = "2.13.18"
 
   val PodpodgeVersion = "0.2.0"
 
@@ -46,7 +46,7 @@ object Build {
       scalacOptions := ScalacOptions,
       javaOptions += "-Dfile.encoding=UTF-8",
       ThisBuild / scalaVersion := ScalaVersion,
-      libraryDependencies ++= Plugins.BaseCompilerPlugins,
+      libraryDependencies ++= CompilerPlugins.BaseCompilerPlugins,
       incOptions ~= (_.withLogRecompileOnMacro(false)),
       autoAPIMappings := true,
       testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),

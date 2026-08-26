@@ -52,10 +52,26 @@ package object types {
   }
   type ServerHost = ServerHost.Type
 
+  /** The network interface the server listens on, as opposed to [[ServerHost]],
+    * which is the address Podpodge advertises to podcast apps in generated RSS
+    * feeds. These are usually the same, but must differ when the address
+    * clients reach Podpodge on isn't an address Podpodge can bind to -- most
+    * notably inside a container, which has to listen on 0.0.0.0 while still
+    * advertising a hostname/IP that's reachable from outside it.
+    *
+    * Env-only (not in the `configuration` table) because it describes the
+    * machine Podpodge runs on rather than the deployment's public identity, so
+    * it doesn't travel with the database.
+    */
+  object ServerBindHost extends RichNewtype[String] {
+    val configKey: String = "PODPODGE_BIND_HOST"
+  }
+  type ServerBindHost = ServerBindHost.Type
+
   object ServerPort extends RichNewtype[Int] {
     val configKey: String = "PODPODGE_PORT"
 
-    override def assertion = assert(greaterThanOrEqualTo(0) && lessThanOrEqualTo(65353))
+    override def assertion = assert(greaterThanOrEqualTo(0) && lessThanOrEqualTo(65535))
   }
   type ServerPort = ServerPort.Type
 

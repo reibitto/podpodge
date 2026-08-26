@@ -9,6 +9,7 @@ import java.time.OffsetDateTime
 final case class Podcast(
     title: String,
     linkUrl: Uri,
+    selfUrl: Uri,
     description: String,
     category: String,
     generator: String,
@@ -27,6 +28,7 @@ object Podcast {
     Podcast(
       podcast.title,
       podcast.linkUrl,
+      config.baseUri.withPath("podcast", podcast.id.unwrap.toString, "rss"),
       podcast.description,
       podcast.category,
       podcast.generator,
@@ -37,6 +39,8 @@ object Podcast {
       podcast.summary,
       config.baseUri.withPath("cover", podcast.id.unwrap.toString),
       episodes.map { episode =>
+        val mediaFile = episode.mediaFilePath(podcast.sourceType).toFile
+
         Episode(
           config.baseUri.withPath("episode", episode.id.unwrap.toString, "file"),
           episode.externalSource,
@@ -44,7 +48,8 @@ object Podcast {
           episode.title,
           episode.publishDate,
           episode.duration,
-          config.baseUri.withPath("thumbnail", episode.id.unwrap.toString)
+          config.baseUri.withPath("thumbnail", episode.id.unwrap.toString),
+          if (mediaFile.exists()) mediaFile.length() else 0L
         )
       }
     )

@@ -54,13 +54,20 @@ package object config {
               .orElse(
                 System.env(DownloaderPath.configKey).some.flatMap(s => ZIO.fromOption(DownloaderPath.make(s).toOption))
               )
-              .orElseSucceed(DownloaderPath("youtube-dl"))
+              .orElseSucceed(DownloaderPath("yt-dlp"))
+          bindHost <-
+            System
+              .env(ServerBindHost.configKey)
+              .some
+              .flatMap(s => ZIO.fromOption(ServerBindHost.make(s).toOption))
+              .orElseSucceed(ServerBindHost(serverHost.unwrap))
         } yield PodpodgeConfig(
           youTubeApiKey,
           serverHost,
           serverPort,
           serverScheme,
-          downloaderPath
+          downloaderPath,
+          bindHost
         )
       }
   }
@@ -70,8 +77,14 @@ package object config {
       serverHost: ServerHost,
       serverPort: ServerPort,
       serverScheme: ServerScheme,
-      downloaderPath: DownloaderPath
+      downloaderPath: DownloaderPath,
+      bindHost: ServerBindHost
   ) {
+
+    /** The address Podpodge advertises to podcast apps. Deliberately built from
+      * `serverHost` rather than `bindHost`: a wildcard bind address like
+      * 0.0.0.0 is meaningless as a URL for a client to fetch from.
+      */
     val baseUri: Uri = Uri(serverScheme.unwrap, serverHost.unwrap, serverPort.unwrap)
   }
 

@@ -1,5 +1,6 @@
 package podpodge.types
 
+import cats.syntax.either.*
 import io.circe.*
 import io.circe.Decoder.Result
 
@@ -50,5 +51,13 @@ object Tristate {
         if (!c.incorrectFocus) Right(Tristate.Unspecified)
         else Left(DecodingFailure("Unable to decode Tristate", c.history))
     }
+
+    // circe's default `tryDecodeAccumulating` (inherited if not overridden) has its own "cursor failed => missing
+    // field" check that runs before ever calling `tryDecode`
+    final override def decodeAccumulating(c: HCursor): Decoder.AccumulatingResult[Tristate[A]] =
+      tryDecodeAccumulating(c)
+
+    final override def tryDecodeAccumulating(c: ACursor): Decoder.AccumulatingResult[Tristate[A]] =
+      tryDecode(c).toValidatedNel
   }
 }

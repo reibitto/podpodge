@@ -1,6 +1,5 @@
 package podpodge.controllers
 
-import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.http.scaladsl.server.directives.FileAndResourceDirectives.ResourceFile
 import org.apache.pekko.stream.scaladsl.{FileIO, Source, StreamConverters}
 import org.apache.pekko.stream.IOResult
@@ -10,7 +9,7 @@ import podpodge.config.Config
 import podpodge.db.dao.{EpisodeDao, PodcastDao}
 import podpodge.db.Podcast
 import podpodge.db.Podcast.Model
-import podpodge.http.{ApiError, HttpError, Sttp}
+import podpodge.http.{ApiError, Sttp}
 import podpodge.types.{PodcastId, SourceType}
 import podpodge.youtube.YouTubeClient
 import sttp.client3.*
@@ -20,6 +19,7 @@ import zio.stream.ZStream
 
 import java.nio.file.{Files, Paths}
 import java.sql.SQLException
+import java.time.OffsetDateTime
 import javax.sql.DataSource
 import scala.concurrent.Future
 import scala.xml.Elem
@@ -42,14 +42,14 @@ object PodcastController {
       id: PodcastId
   ): ZIO[DataSource, Exception, Source[ByteString, Future[IOResult]]] =
     for {
-      podcast <- PodcastDao.get(id).someOrFail(HttpError(StatusCodes.NotFound))
+      podcast <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
       result <- podcast.imagePath.map(_.toFile) match {
                   case Some(imageFile) if imageFile.exists() =>
                     ZIO.succeed(FileIO.fromPath(imageFile.toPath))
 
                   case _ =>
                     Option(getClass.getResource("/question.png")).flatMap(ResourceFile.apply) match {
-                      case None => ZIO.fail(HttpError(StatusCodes.InternalServerError))
+                      case None => ZIO.fail(ApiError.InternalError("Default cover image resource is missing."))
                       case Some(resource) =>
                         ZIO.succeed(StreamConverters.fromInputStream(() => resource.url.openStream()))
                     }
@@ -123,11 +123,14 @@ object PodcastController {
   private def enqueueDownload(downloadQueue: Queue[CreateEpisodeRequest])(
       podcast: Podcast.Model,
       excludeExternalSources: Set[String]
-  ): RIO[Sttp & Config, Unit] =
-    podcast.sourceType match {
-      case SourceType.YouTube   => enqueueDownloadYouTube(downloadQueue)(podcast, excludeExternalSources)
-      case SourceType.Directory => enqueueDownloadFile(downloadQueue)(podcast, excludeExternalSources)
-    }
+  ): RIO[Sttp & DataSource & Config, Unit] =
+    for {
+      _ <- podcast.sourceType match {
+             case SourceType.YouTube   => enqueueDownloadYouTube(downloadQueue)(podcast, excludeExternalSources)
+             case SourceType.Directory => enqueueDownloadFile(downloadQueue)(podcast, excludeExternalSources)
+           }
+      _ <- PodcastDao.updateLastCheckDate(podcast.id, OffsetDateTime.now())
+    } yield ()
 
   private def enqueueDownloadFile(
       downloadQueue: Queue[CreateEpisodeRequest]
@@ -160,13 +163,30 @@ object PodcastController {
       excludeExternalSources: Set[String]
   ): RIO[Sttp & Config, Unit] = for {
     youTubeApiKey <- config.youTubeApiKey
-    result <- // TODO: Update lastCheckDate here. Will definitely need it for the cron schedule feature.
+    result <-
       YouTubeClient
         .listPlaylistItems(podcast.externalSource, youTubeApiKey)
         .filterNot(item => excludeExternalSources.contains(item.snippet.resourceId.videoId))
-        .foreach { item =>
-          ZIO.logTrace(s"Putting '${item.snippet.title}' (${item.snippet.resourceId.videoId}) in download queue") *>
-            downloadQueue.offer(CreateEpisodeRequest.YouTube(podcast.id, item))
+        // Durations are resolved a page at a time rather than per episode (for quota saving reasons).
+        .grouped(YouTubeClient.MaxIdsPerRequest)
+        .foreach { batch =>
+          val videoIds = batch.map(_.snippet.resourceId.videoId)
+
+          for {
+            durations <- YouTubeClient
+                           .getVideoDurations(videoIds, youTubeApiKey)
+                           .catchAll { t =>
+                             ZIO
+                               .logWarning(s"Failed to fetch durations for ${videoIds.size} video(s): ${t.getMessage}")
+                               .as(Map.empty[String, java.time.Duration])
+                           }
+            _ <- ZIO.foreachDiscard(batch) { item =>
+                   val videoId = item.snippet.resourceId.videoId
+
+                   ZIO.logTrace(s"Putting '${item.snippet.title}' ($videoId) in download queue") *>
+                     downloadQueue.offer(CreateEpisodeRequest.YouTube(podcast.id, item, durations.get(videoId)))
+                 }
+          } yield ()
         }
         .tap(_ => ZIO.logInfo(s"Done checking for new YouTube episodes for Podcast ${podcast.id}"))
   } yield result

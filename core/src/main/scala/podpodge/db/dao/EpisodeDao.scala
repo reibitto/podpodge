@@ -1,12 +1,12 @@
 package podpodge.db.dao
 
-import io.getquill.Ord
 import podpodge.db.Episode
 import podpodge.db.Episode.Model
 import podpodge.types.{EpisodeId, PodcastId}
 import zio.ZIO
 
 import java.sql.SQLException
+import java.time.OffsetDateTime
 import javax.sql.DataSource
 
 object EpisodeDao extends SqlDao {
@@ -27,10 +27,15 @@ object EpisodeDao extends SqlDao {
       quote(query[Episode.Model].map(_.externalSource))
     }
 
+  /** Sorted newest-first in Scala rather than via `ORDER BY`: `publish_date` is
+    * stored as ISO-8601 text, which can have sortable issue whether there's
+    * fractional seconds and the Z timezone, etc.
+    */
   def listByPodcast(id: PodcastId): ZIO[DataSource, SQLException, List[Model]] =
     ctx.run {
-      quote(query[Episode.Model].filter(_.podcastId == lift(id))).sortBy(_.publishDate)(Ord.desc)
+      quote(query[Episode.Model].filter(_.podcastId == lift(id)))
     }
+      .map(_.sortBy(_.publishDate)(Ordering[OffsetDateTime].reverse))
 
   def create(episode: Episode.Insert): ZIO[DataSource, SQLException, Episode[EpisodeId]] =
     ctx.run {

@@ -20,6 +20,6 @@ object PodpodgeLogging {
       cause.highlight.filter(LogFilter.causeNonEmpty)
 
   val default: ZLayer[Any, Nothing, Unit] =
-    consoleLogger(ConsoleLoggerConfig(coloredFormat, LogFilter.logLevel(LogLevel.Debug)))
+    consoleLogger(ConsoleLoggerConfig(coloredFormat, LogFilter.LogLevelByNameConfig(LogLevel.Debug)))
 
 }

@@ -23,9 +23,11 @@ object PodpodgeServer {
       server <- ZIO.acquireRelease(
                   ZIO.fromFuture { _ =>
                     Http()
-                      .newServerAt(config.serverHost.unwrap, config.serverPort.unwrap)
+                      .newServerAt(config.bindHost.unwrap, config.serverPort.unwrap)
                       .bind(Routes.make(downloadQueue, episodesDownloading)(runtime))
-                  } <* ZIO.logInfo(s"Starting server at ${config.baseUri}")
+                  } <* ZIO.logInfo(
+                    s"Listening on ${config.bindHost}:${config.serverPort}, serving feeds at ${config.baseUri}"
+                  )
                 )(server =>
                   (for {
                     _ <- ZIO.logInfo("Shutting down server")
