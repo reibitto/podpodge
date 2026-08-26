@@ -1,5 +1,6 @@
 package podpodge.db.dao
 
+import io.getquill.Ord
 import podpodge.db.Episode
 import podpodge.db.Episode.Model
 import podpodge.types.{EpisodeId, PodcastId}
@@ -28,7 +29,7 @@ object EpisodeDao extends SqlDao {
 
   def listByPodcast(id: PodcastId): ZIO[DataSource, SQLException, List[Model]] =
     ctx.run {
-      quote(query[Episode.Model].filter(_.podcastId == lift(id)))
+      quote(query[Episode.Model].filter(_.podcastId == lift(id))).sortBy(_.publishDate)(Ord.desc)
     }
 
   def create(episode: Episode.Insert): ZIO[DataSource, SQLException, Episode[EpisodeId]] =

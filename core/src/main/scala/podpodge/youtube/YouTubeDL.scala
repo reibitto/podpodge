@@ -33,12 +33,13 @@ object YouTubeDL {
         // VBR can cause slowness with seeks in podcast apps, so we use a constant bitrate instead.
         _ <- Command(
                downloaderPath.unwrap,
-               "--no-call-home",
                "--extract-audio",
                "--audio-format",
                audioFormat,
                "--audio-quality",
                "128K",
+               "--cookies-from-browser",
+               "firefox",
                "--output",
                outputFile.getName,
                videoUrl
