@@ -61,13 +61,26 @@ package object config {
               .some
               .flatMap(s => ZIO.fromOption(ServerBindHost.make(s).toOption))
               .orElseSucceed(ServerBindHost(serverHost.unwrap))
+          autoCheckAllPodcastUpdates <-
+            ZIO
+              .fromOption(dbConfig.autoCheckAllPodcastUpdates)
+              .orElse(
+                System
+                  .env(AutoCheckAllPodcastUpdates.configKey)
+                  .some
+                  .flatMap(s =>
+                    ZIO.fromOption(s.toBooleanOption.flatMap(b => AutoCheckAllPodcastUpdates.make(b).toOption))
+                  )
+              )
+              .orElseSucceed(AutoCheckAllPodcastUpdates(true))
         } yield PodpodgeConfig(
           youTubeApiKey,
           serverHost,
           serverPort,
           serverScheme,
           downloaderPath,
-          bindHost
+          bindHost,
+          autoCheckAllPodcastUpdates
         )
       }
   }
@@ -78,7 +91,8 @@ package object config {
       serverPort: ServerPort,
       serverScheme: ServerScheme,
       downloaderPath: DownloaderPath,
-      bindHost: ServerBindHost
+      bindHost: ServerBindHost,
+      autoCheckAllPodcastUpdates: AutoCheckAllPodcastUpdates
   ) {
 
     /** The address Podpodge advertises to podcast apps. Deliberately built from

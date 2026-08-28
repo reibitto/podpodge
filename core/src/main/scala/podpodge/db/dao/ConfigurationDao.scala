@@ -26,7 +26,8 @@ object ConfigurationDao extends SqlDao {
                         serverHost = None,
                         serverPort = None,
                         serverScheme = None,
-                        downloaderPath = None
+                        downloaderPath = None,
+                        autoCheckAllPodcastUpdates = None
                       )
                     )
                 }
@@ -66,7 +67,9 @@ object ConfigurationDao extends SqlDao {
                         serverHost = patch.serverHost.specify(originalConfig.serverHost),
                         serverPort = patch.serverPort.specify(originalConfig.serverPort),
                         serverScheme = patch.serverScheme.specify(originalConfig.serverScheme),
-                        downloaderPath = patch.downloaderPath.specify(originalConfig.downloaderPath)
+                        downloaderPath = patch.downloaderPath.specify(originalConfig.downloaderPath),
+                        autoCheckAllPodcastUpdates =
+                          patch.autoCheckAllPodcastUpdates.specify(originalConfig.autoCheckAllPodcastUpdates)
                       )
       _ <- update(patchedConfig)
     } yield patchedConfig

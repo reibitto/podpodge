@@ -11,7 +11,8 @@ final case class Configuration[ID](
     serverHost: Option[ServerHost],
     serverPort: Option[ServerPort],
     serverScheme: Option[ServerScheme],
-    downloaderPath: Option[DownloaderPath]
+    downloaderPath: Option[DownloaderPath],
+    autoCheckAllPodcastUpdates: Option[AutoCheckAllPodcastUpdates]
 )
 
 object Configuration {

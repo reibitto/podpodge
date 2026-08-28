@@ -2,14 +2,23 @@ package podpodge.db.patch
 
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto.deriveEncoder
-import podpodge.types.{DownloaderPath, ServerHost, ServerPort, ServerScheme, Tristate, YouTubeApiKey}
+import podpodge.types.{
+  AutoCheckAllPodcastUpdates,
+  DownloaderPath,
+  ServerHost,
+  ServerPort,
+  ServerScheme,
+  Tristate,
+  YouTubeApiKey
+}
 
 final case class PatchConfiguration(
     youTubeApiKey: Tristate[YouTubeApiKey] = Tristate.None,
     serverHost: Tristate[ServerHost] = Tristate.None,
     serverPort: Tristate[ServerPort] = Tristate.None,
     serverScheme: Tristate[ServerScheme] = Tristate.None,
-    downloaderPath: Tristate[DownloaderPath] = Tristate.None
+    downloaderPath: Tristate[DownloaderPath] = Tristate.None,
+    autoCheckAllPodcastUpdates: Tristate[AutoCheckAllPodcastUpdates] = Tristate.None
 )
 
 object PatchConfiguration {
@@ -25,6 +34,15 @@ object PatchConfiguration {
       serverPort     <- c.downField("serverPort").as[Tristate[ServerPort]]
       serverScheme   <- c.downField("serverScheme").as[Tristate[ServerScheme]]
       downloaderPath <- c.downField("downloaderPath").as[Tristate[DownloaderPath]]
-    } yield PatchConfiguration(youTubeApiKey, serverHost, serverPort, serverScheme, downloaderPath)
+      autoCheckAllPodcastUpdates <-
+        c.downField("autoCheckAllPodcastUpdates").as[Tristate[AutoCheckAllPodcastUpdates]]
+    } yield PatchConfiguration(
+      youTubeApiKey,
+      serverHost,
+      serverPort,
+      serverScheme,
+      downloaderPath,
+      autoCheckAllPodcastUpdates
+    )
   }
 }

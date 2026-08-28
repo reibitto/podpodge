@@ -55,6 +55,15 @@ trait TapirSupport {
   ): Codec[String, T, CodecFormat.TextPlain] =
     Codec.long.map(RichNewtype.wrap(_))(RichNewtype.unwrap(_))
 
+  implicit def booleanNewtypeSchema[T <: RichNewtype[Boolean]#Type]: Schema[T] = Schema(SchemaType.SBoolean())
+
+  implicit def booleanNewtypeValidator[T <: RichNewtype[Boolean]#Type]: Validator[T] = Validator.pass
+
+  implicit def booleanNewtypeCodec[T <: RichNewtype[Boolean]#Type](implicit
+      equiv: Equivalence[Boolean, T]
+  ): Codec[String, T, CodecFormat.TextPlain] =
+    Codec.boolean.map(RichNewtype.wrap(_))(RichNewtype.unwrap(_))
+
   implicit val xmlCodec: Codec[String, Elem, CodecFormat.Xml] =
     implicitly[PlainCodec[String]]
       .map(XML.loadString(_))(elem => "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + elem.toString)

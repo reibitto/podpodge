@@ -4,6 +4,7 @@ import org.apache.pekko.actor.typed.scaladsl.Behaviors
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
 import podpodge.*
+import podpodge.controllers.PodcastController
 import podpodge.types.EpisodeId
 import zio.*
 
@@ -36,6 +37,7 @@ object PodpodgeServer {
                     _ <- ZIO.fromFuture(_ => system.whenTerminated)
                   } yield ()).orDie
                 )
+      _ <- PodcastController.checkForUpdatesAll(downloadQueue).when(config.autoCheckAllPodcastUpdates.unwrap)
     } yield server
   }
 }

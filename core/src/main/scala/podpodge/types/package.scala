@@ -85,4 +85,9 @@ package object types {
   }
   type DownloaderPath = DownloaderPath.Type
 
+  object AutoCheckAllPodcastUpdates extends RichNewtype[Boolean] {
+    val configKey: String = "PODPODGE_AUTO_CHECK_ALL_PODCAST_UPDATES"
+  }
+  type AutoCheckAllPodcastUpdates = AutoCheckAllPodcastUpdates.Type
+
 }
