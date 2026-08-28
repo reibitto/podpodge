@@ -84,9 +84,19 @@ object YouTubeDL {
       "128K",
       "--output",
       outputFile.getName,
+      // Without a real terminal (as with `inheritIO` under sbt's forked run), yt-dlp collapses its \r-based
+      // in-place progress updates instead of emitting them, so nothing shows until the download finishes.
+      // --newline forces one full progress line per update regardless of tty detection.
+      "--newline",
       videoUrl
     ) ++ cookiesArgs
 
-    Command(downloaderPath.unwrap, args*).workingDirectory(workingDirectory).inheritIO.successfulExitCode.unit
+    // Force yt-dlp's own stdout to flush immediately
+    Command(downloaderPath.unwrap, args*)
+      .workingDirectory(workingDirectory)
+      .env(Map("PYTHONUNBUFFERED" -> "1"))
+      .inheritIO
+      .successfulExitCode
+      .unit
   }
 }

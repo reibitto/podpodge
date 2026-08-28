@@ -33,6 +33,7 @@ object PodcastController {
 
   def getPodcastRss(id: PodcastId): RIO[DataSource & Config, Elem] =
     for {
+      _        <- ZIO.logInfo(s"Serving RSS feed for Podcast $id")
       config   <- config.get
       podcast  <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
       episodes <- EpisodeDao.listByPodcast(id)

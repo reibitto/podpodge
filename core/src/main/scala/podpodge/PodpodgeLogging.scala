@@ -15,9 +15,8 @@ object PodpodgeLogging {
     timestamp.color(LogColor.BLUE) |-|
       level.highlight |-|
       fiberId.color(LogColor.WHITE) |-|
-      line.highlight |-|
-      newLine +
-      cause.highlight.filter(LogFilter.causeNonEmpty)
+      line.highlight +
+      (newLine + cause.highlight).filter(LogFilter.causeNonEmpty)
 
   val default: ZLayer[Any, Nothing, Unit] =
     consoleLogger(ConsoleLoggerConfig(coloredFormat, LogFilter.LogLevelByNameConfig(LogLevel.Debug)))
