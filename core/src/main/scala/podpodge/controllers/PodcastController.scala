@@ -150,11 +150,14 @@ object PodcastController {
           case _                                                               => false
         }
       }
-      .foreach { item =>
-        ZIO.logTrace(s"Putting '$item' in download queue") *>
-          downloadQueue.offer(CreateEpisodeRequest.File(podcast.id, item))
+      .runFoldZIO(0) { (count, item) =>
+        (ZIO.logTrace(s"Putting '$item' in download queue") *>
+          downloadQueue.offer(CreateEpisodeRequest.File(podcast.id, item))).as(count + 1)
       }
-      .tap(_ => ZIO.logInfo(s"Done checking for new episode files for Podcast ${podcast.id}"))
+      .tap(count =>
+        ZIO.logInfo(s"Done checking for new episode files for Podcast ${podcast.id}: found $count new episode(s)")
+      )
+      .unit
   }
 
   private def enqueueDownloadYouTube(
@@ -164,13 +167,13 @@ object PodcastController {
       excludeExternalSources: Set[String]
   ): RIO[Sttp & Config, Unit] = for {
     youTubeApiKey <- config.youTubeApiKey
-    result <-
+    _ <-
       YouTubeClient
         .listPlaylistItems(podcast.externalSource, youTubeApiKey)
         .filterNot(item => excludeExternalSources.contains(item.snippet.resourceId.videoId))
         // Durations are resolved a page at a time rather than per episode (for quota saving reasons).
         .grouped(YouTubeClient.MaxIdsPerRequest)
-        .foreach { batch =>
+        .runFoldZIO(0) { (count, batch) =>
           val videoIds = batch.map(_.snippet.resourceId.videoId)
 
           for {
@@ -187,9 +190,11 @@ object PodcastController {
                    ZIO.logTrace(s"Putting '${item.snippet.title}' ($videoId) in download queue") *>
                      downloadQueue.offer(CreateEpisodeRequest.YouTube(podcast.id, item, durations.get(videoId)))
                  }
-          } yield ()
+          } yield count + batch.size
         }
-        .tap(_ => ZIO.logInfo(s"Done checking for new YouTube episodes for Podcast ${podcast.id}"))
-  } yield result
+        .tap(count =>
+          ZIO.logInfo(s"Done checking for new YouTube episodes for Podcast ${podcast.id}: found $count new episode(s)")
+        )
+  } yield ()
 
 }

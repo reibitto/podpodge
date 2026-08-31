@@ -12,7 +12,8 @@ object PodpodgeConfigSpec extends ZIOSpecDefault {
       serverPort = ServerPort.makeUnsafe(8080),
       serverScheme = ServerScheme("http"),
       downloaderPath = DownloaderPath("yt-dlp"),
-      bindHost = ServerBindHost(bindHost)
+      bindHost = ServerBindHost(bindHost),
+      autoCheckAllPodcastUpdates = AutoCheckAllPodcastUpdates(true)
     )
 
   def spec = suite("PodpodgeConfigSpec")(

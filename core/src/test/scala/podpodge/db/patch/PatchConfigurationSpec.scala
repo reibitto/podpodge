@@ -14,6 +14,7 @@ object PatchConfigurationSpec extends ZIOSpecDefault {
     Tristate.Unspecified,
     Tristate.Unspecified,
     Tristate.Unspecified,
+    Tristate.Unspecified,
     Tristate.Unspecified
   )
 
@@ -53,7 +54,8 @@ object PatchConfigurationSpec extends ZIOSpecDefault {
             Tristate.Some(ServerHost("localhost")),
             Tristate.Some(ServerPort.makeUnsafe(8080)),
             Tristate.Some(ServerScheme("http")),
-            Tristate.Some(DownloaderPath("yt-dlp"))
+            Tristate.Some(DownloaderPath("yt-dlp")),
+            Tristate.Unspecified
           )
         )
       )
