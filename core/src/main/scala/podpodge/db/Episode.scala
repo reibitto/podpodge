@@ -30,10 +30,8 @@ final case class Episode[ID](
     case SourceType.Directory => Uri(new File(externalSource).toURI)
   }
 
-  // Where the downloaded audio file lives on disk, matching the convention used by `YouTubeDL.download` and
-  // `EpisodeController`.
   def mediaFilePath(sourceType: SourceType): Path = sourceType match {
-    case SourceType.YouTube   => StaticConfig.audioPath.resolve(podcastId.unwrap.toString).resolve(s"$externalSource.mp3")
+    case SourceType.YouTube   => StaticConfig.youTubeAudioPath(podcastId, externalSource)
     case SourceType.Directory => Paths.get(externalSource)
   }
 }

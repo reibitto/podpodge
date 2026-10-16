@@ -37,7 +37,12 @@ object PodpodgeServer {
                     _ <- ZIO.fromFuture(_ => system.whenTerminated)
                   } yield ()).orDie
                 )
-      _ <- PodcastController.checkForUpdatesAll(downloadQueue).when(config.autoCheckAllPodcastUpdates.unwrap)
+      // Forked so a slow or failing check (e.g. missing YouTube API key) doesn't block or crash startup.
+      _ <- PodcastController
+             .checkForUpdatesAll(downloadQueue)
+             .catchAllCause(ZIO.logErrorCause("Startup check for podcast updates failed", _))
+             .forkDaemon
+             .when(config.autoCheckAllPodcastUpdates.unwrap)
     } yield server
   }
 }

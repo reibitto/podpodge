@@ -20,8 +20,7 @@ object Video {
 final case class VideoContentDetails(duration: Duration)
 
 object VideoContentDetails {
-  // YouTube reports duration in ISO-8601 format (e.g. "PT4M13S"), which `java.time.Duration.parse` understands
-  // directly.
+  // ISO-8601, e.g. "PT4M13S".
   implicit val durationDecoder: Decoder[Duration] = Decoder.decodeString.emapTry(s => scala.util.Try(Duration.parse(s)))
 
   implicit val decoder: Decoder[VideoContentDetails] = deriveDecoder[VideoContentDetails]

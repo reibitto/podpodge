@@ -107,9 +107,13 @@ object PodcastController {
     for {
       podcasts        <- PodcastDao.list
       externalSources <- EpisodeDao.listExternalSource.map(_.toSet)
-      _ <- ZIO.foreachDiscard(podcasts) { podcast =>
-             enqueueDownload(downloadQueue)(podcast, externalSources)
-           }
+      // One failing podcast (e.g. a deleted playlist) shouldn't stop the others from being checked.
+      _ <- ZIO
+             .validateDiscard(podcasts) { podcast =>
+               enqueueDownload(downloadQueue)(podcast, externalSources)
+                 .tapErrorCause(ZIO.logErrorCause(s"Failed to check for updates for Podcast ${podcast.id}", _))
+             }
+             .mapError(_.head)
     } yield ()
 
   def checkForUpdates(
@@ -171,7 +175,7 @@ object PodcastController {
       YouTubeClient
         .listPlaylistItems(podcast.externalSource, youTubeApiKey)
         .filterNot(item => excludeExternalSources.contains(item.snippet.resourceId.videoId))
-        // Durations are resolved a page at a time rather than per episode (for quota saving reasons).
+        // Fetch durations per batch rather than per video to save API quota.
         .grouped(YouTubeClient.MaxIdsPerRequest)
         .runFoldZIO(0) { (count, batch) =>
           val videoIds = batch.map(_.snippet.resourceId.videoId)

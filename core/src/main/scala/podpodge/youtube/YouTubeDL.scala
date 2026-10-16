@@ -11,56 +11,49 @@ import java.util.concurrent.TimeoutException
 
 object YouTubeDL {
 
-  // yt-dlp occasionally hangs outright instead of failing (e.g. a stalled connection, or waiting on a locked
-  // browser cookie database) rather than YouTube's usual cat-and-mouse rejections, which at least fail fast. Without
-  // a hard timeout, a hung process wedges its entry in `episodesDownloading` forever, since its promise never
-  // completes and every future request for that episode just piles onto the same stuck promise.
+  // yt-dlp can hang (stalled connection, locked cookie database). Without a timeout, the episode's promise in
+  // `episodesDownloading` never completes and every later request for it waits forever.
   val downloadTimeout: Duration = 20.minutes
 
   val maxRetries: Int = 1
 
-  // Not stored in the `configuration` table (unlike DownloaderPath) since it's meaningful only on the specific
-  // machine yt-dlp runs on -- a browser profile that exists on your desktop won't exist inside a container. Unset by
-  // default so containerized/headless deployments (which have no browser to read cookies from) work out of the box;
-  // set this to a browser name (e.g. "firefox") on setups where YouTube's bot detection needs cookies to pass.
+  // Env-only since browser profiles are machine-specific (and absent in containers). Set to e.g. "firefox" when
+  // YouTube's bot detection requires cookies.
   val cookiesFromBrowserConfigKey = "PODPODGE_DOWNLOADER_COOKIES_FROM_BROWSER"
 
   def download(
       podcastId: PodcastId,
       videoId: String,
-      downloaderPathOpt: Option[DownloaderPath]
+      downloaderPath: DownloaderPath
   ): Task[File] = {
-    // TODO: Support other audio formats in the future. Note that `EpisodeController` and so on
-    // will have to be updated as well since "mp3" is hardcoded there.
+    // TODO: Support other audio formats. "mp3" is also hardcoded in `StaticConfig.youTubeAudioPath`, the RSS
+    // enclosure type, etc.
     val audioFormat = "mp3"
-    val podcastAudioDirectory = StaticConfig.audioPath.resolve(podcastId.unwrap.toString)
-    val outputFile = podcastAudioDirectory.resolve(s"$videoId.$audioFormat").toFile
-    val downloaderPath = downloaderPathOpt.getOrElse(DownloaderPath("yt-dlp"))
+    val outputFile = StaticConfig.youTubeAudioPath(podcastId, videoId).toFile
+    val podcastAudioDirectory = outputFile.toPath.getParent
 
     if (outputFile.exists) {
       ZIO.logInfo(s"${outputFile.getName} already exists. Skipping download.").as(outputFile)
     } else {
       for {
         workingDirectory <- ZIO.attempt(Files.createDirectories(podcastAudioDirectory))
-        // Pass a URL to yt-dlp instead of just the videoId because YouTube's IDs can start with a hyphen which
-        // confuses yt-dlp into thinking it's a command-line option.
+        // Pass a URL rather than the bare ID since IDs can start with a hyphen, which yt-dlp parses as an option.
         videoUrl = s"https://www.youtube.com/watch?v=$videoId"
         cookiesFromBrowser <- System.env(cookiesFromBrowserConfigKey)
         _ <- runDownload(downloaderPath, audioFormat, outputFile, workingDirectory.toFile, videoUrl, cookiesFromBrowser)
                .timeoutFail(
                  new TimeoutException(s"Timed out after $downloadTimeout downloading video '$videoId'")
                )(downloadTimeout)
-               // Clean up whatever yt-dlp may have partially written so a retry (or a future request) doesn't
-               // mistake a broken leftover file for a completed download and skip re-downloading forever. This has
-               // to cover interruption too, not just failure: the download runs on a daemon fiber, so a shutdown
-               // (or the timeout above) can cut it off mid-extraction, and the `outputFile.exists` check at the top
-               // would then serve that truncated mp3 forever, since nothing would ever re-download it.
+               // Delete partial output on failure or interruption, otherwise the `exists` check above would serve
+               // a truncated file forever.
                .onExit {
                  case Exit.Success(_) => ZIO.unit
                  case _               => ZIO.attempt(outputFile.delete()).ignore
                }
                .retry(Schedule.exponential(30.seconds) && Schedule.recurs(maxRetries))
-               .tapError(t => ZIO.logError(s"Giving up on video '$videoId' after $maxRetries retries: ${t.getMessage}"))
+               .tapError(t =>
+                 ZIO.logError(s"Giving up on video '$videoId' after ${maxRetries + 1} attempts: ${t.getMessage}")
+               )
       } yield outputFile
     }
   }
@@ -84,14 +77,11 @@ object YouTubeDL {
       "128K",
       "--output",
       outputFile.getName,
-      // Without a real terminal (as with `inheritIO` under sbt's forked run), yt-dlp collapses its \r-based
-      // in-place progress updates instead of emitting them, so nothing shows until the download finishes.
-      // --newline forces one full progress line per update regardless of tty detection.
-      "--newline",
-      videoUrl
-    ) ++ cookiesArgs
+      // Print progress as separate lines. Without a tty, \r-based progress shows nothing until the end.
+      "--newline"
+    ) ++ cookiesArgs :+ videoUrl
 
-    // Force yt-dlp's own stdout to flush immediately
+    // Unbuffered so progress output appears immediately.
     Command(downloaderPath.unwrap, args*)
       .workingDirectory(workingDirectory)
       .env(Map("PYTHONUNBUFFERED" -> "1"))

@@ -95,10 +95,7 @@ package object config {
       autoCheckAllPodcastUpdates: AutoCheckAllPodcastUpdates
   ) {
 
-    /** The address Podpodge advertises to podcast apps. Deliberately built from
-      * `serverHost` rather than `bindHost`: a wildcard bind address like
-      * 0.0.0.0 is meaningless as a URL for a client to fetch from.
-      */
+    // Built from `serverHost`, not `bindHost`, since clients can't fetch from a wildcard address like 0.0.0.0.
     val baseUri: Uri = Uri(serverScheme.unwrap, serverHost.unwrap, serverPort.unwrap)
   }
 

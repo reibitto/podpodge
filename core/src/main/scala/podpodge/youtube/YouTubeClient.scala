@@ -12,15 +12,11 @@ import java.time.Duration
 
 object YouTubeClient {
 
-  /** The most ids the `videos`/`playlistItems` endpoints accept in a single
-    * request. Each request costs the same quota regardless of how many ids it
-    * has, so batching up to this limit is 50x cheaper.
-    */
+  // Max IDs per `videos` request. Quota cost is per request, so batching saves quota.
   val MaxIdsPerRequest: Int = 50
 
-  /** Durations for up to [[MaxIdsPerRequest]] videos at a time, keyed by video
-    * id. IDs the API doesn't return (a deleted or private video) are simply
-    * absent from the result rather than being an error.
+  /** Durations keyed by video ID, for up to [[MaxIdsPerRequest]] IDs. Deleted
+    * or private videos are absent from the result.
     */
   def getVideoDurations(
       videoIds: Seq[String],

@@ -24,9 +24,8 @@ final case class PatchConfiguration(
 object PatchConfiguration {
   implicit val encoder: Encoder[PatchConfiguration] = deriveEncoder[PatchConfiguration]
 
-  // Handwritten rather than derived: circe-generic's macro-derived `decodeAccumulating` (which tapir's jsonBody
-  // uses under the hood) has its own "field missing => error" check that runs before ever consulting the field's
-  // own Decoder.
+  // Handwritten because the derived `decodeAccumulating` (used by tapir) rejects missing fields before calling the
+  // field decoder, which breaks `Tristate.Unspecified`.
   implicit val decoder: Decoder[PatchConfiguration] = Decoder.instance { c =>
     for {
       youTubeApiKey  <- c.downField("youTubeApiKey").as[Tristate[YouTubeApiKey]]

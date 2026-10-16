@@ -12,7 +12,6 @@ final case class Episode(
     publishDate: OffsetDateTime,
     duration: Duration,
     imageUrl: Uri,
-    // The enclosure's byte size, per the RSS spec. 0 when the file hasn't been downloaded yet (YouTube episodes are
-    // fetched on demand), since the real size can't be known in advance.
+    // Enclosure size in bytes. 0 if not downloaded yet, since YouTube episodes are fetched on demand.
     mediaLength: Long
 )

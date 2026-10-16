@@ -18,9 +18,7 @@ object PodpodgeConfigSpec extends ZIOSpecDefault {
 
   def spec = suite("PodpodgeConfigSpec")(
     test("baseUri advertises serverHost, not the bind address") {
-      // Regression test: the Docker image binds to 0.0.0.0, and baseUri is what every URL in a generated RSS feed
-      // is built from. Deriving it from the bind address produced feeds full of unreachable http://0.0.0.0:8080
-      // links, which no podcast app can fetch.
+      // Regression: feeds built from the Docker bind address pointed at unreachable http://0.0.0.0 URLs.
       val c = config(host = "podcasts.example.com", bindHost = "0.0.0.0")
       assertTrue(c.baseUri.toString == "http://podcasts.example.com:8080")
     },

@@ -27,10 +27,17 @@ object EpisodeDao extends SqlDao {
       quote(query[Episode.Model].map(_.externalSource))
     }
 
-  /** Sorted newest-first in Scala rather than via `ORDER BY`: `publish_date` is
-    * stored as ISO-8601 text, which can have sortable issue whether there's
-    * fractional seconds and the Z timezone, etc.
-    */
+  def exists(podcastId: PodcastId, externalSource: String): ZIO[DataSource, SQLException, Boolean] =
+    ctx.run {
+      quote(
+        query[Episode.Model]
+          .filter(e => e.podcastId == lift(podcastId) && e.externalSource == lift(externalSource))
+          .nonEmpty
+      )
+    }
+
+  // Sorted in Scala because `publish_date` is variable-width ISO-8601 text (optional fractional seconds), so
+  // `ORDER BY` would sort lexicographically rather than chronologically.
   def listByPodcast(id: PodcastId): ZIO[DataSource, SQLException, List[Model]] =
     ctx.run {
       quote(query[Episode.Model].filter(_.podcastId == lift(id)))

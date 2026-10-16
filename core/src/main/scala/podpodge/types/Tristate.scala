@@ -52,8 +52,7 @@ object Tristate {
         else Left(DecodingFailure("Unable to decode Tristate", c.history))
     }
 
-    // circe's default `tryDecodeAccumulating` (inherited if not overridden) has its own "cursor failed => missing
-    // field" check that runs before ever calling `tryDecode`
+    // The inherited accumulating decoders treat a failed cursor as a missing field without calling `tryDecode`.
     final override def decodeAccumulating(c: HCursor): Decoder.AccumulatingResult[Tristate[A]] =
       tryDecodeAccumulating(c)
 

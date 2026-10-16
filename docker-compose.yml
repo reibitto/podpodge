@@ -8,12 +8,10 @@ services:
     environment:
       # Required for `youTube` podcasts. https://developers.google.com/youtube/registering_an_application
       PODPODGE_YOUTUBE_API_KEY: ${PODPODGE_YOUTUBE_API_KEY:-}
-      # The address Podpodge advertises in generated RSS feeds, so it has to be one your podcast app can reach --
-      # this machine's LAN IP, or a public hostname. Leaving it as localhost produces feeds that only work on the
-      # host itself. (The image already sets PODPODGE_BIND_HOST=0.0.0.0, so the published port works regardless.)
+      # Address used in RSS feed URLs. Must be reachable by your podcast app (LAN IP or public hostname).
       PODPODGE_HOST: ${PODPODGE_HOST:-localhost}
     volumes:
-      # The SQLite database and downloaded audio. Without this, everything is lost when the container is recreated.
+      # SQLite database and downloaded audio.
       - podpodge-data:/opt/docker/data
 
 volumes:

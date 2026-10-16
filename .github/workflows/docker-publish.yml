@@ -1,16 +1,13 @@
 name: Publish Docker image
 
-# Publishes to GitHub Container Registry (ghcr.io) rather than Docker Hub: auth needs no secrets (the automatic
-# GITHUB_TOKEN is enough), and GHCR doesn't impose the anonymous pull rate limits that Docker Hub does, which
-# self-hosted users running `docker pull` behind a shared IP tend to run into.
+# Publishes to ghcr.io, which needs only GITHUB_TOKEN and has no anonymous pull rate limits.
 #
-# NOTE: the first successful run creates the package as *private*, even though the repo is public. It has to be
-# flipped to public once, by hand, under the repo's Packages settings, or `docker pull` will 401 for everyone else.
+# NOTE: The first run creates the package as private. Make it public once in the repo's Packages settings, or
+# `docker pull` will return 401 for everyone else.
 
 on:
   push:
-    # Release on version tags only. Building for two architectures takes a while (the non-native one runs under
-    # emulation), so it's deliberately not wired to every push to master.
+    # Tags only, since the multi-arch build (emulated) is slow.
     tags: ['v*']
   workflow_dispatch:
 
@@ -38,13 +35,12 @@ jobs:
 
       - uses: sbt/setup-sbt@v1
 
-      # Tests run here too so a broken build can't be published under a version tag. `Docker/stage` writes the
-      # Dockerfile and its context to target/docker/stage (pinned in build.sbt) instead of building the image --
-      # sbt-native-packager's own `Docker/publishLocal` can only produce a single-architecture image.
+      # `Docker/stage` writes the build context to target/docker/stage (see build.sbt). buildx builds it, since
+      # `Docker/publishLocal` only produces a single-architecture image.
       - name: Run tests and stage the Docker build context
         run: sbt -Dscalac.lenientDev.enabled=false "test; podpodge/Docker/stage"
 
-      # Emulation for whichever architecture the runner isn't.
+      # Emulates the non-native architecture.
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
 
@@ -59,8 +55,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          # `latest=auto` moves :latest onto each new semver tag. Manual runs publish :edge instead, so they can be
-          # used to smoke-test image changes without pretending to be a release.
+          # Semver tags also move :latest. Manual runs publish :edge for testing.
           flavor: latest=auto
           tags: |
             type=semver,pattern={{version}}
@@ -71,8 +66,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: target/docker/stage
-          # amd64 covers most self-hosting (NAS boxes, x86 servers, VPSes); arm64 covers Raspberry Pi, Apple Silicon
-          # and ARM VPSes. Publishing only the architecture the runner happens to use would leave out half of them.
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}

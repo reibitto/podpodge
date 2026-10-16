@@ -19,12 +19,20 @@ object DownloadWorker {
     ZStream
       .fromQueue(queue)
       .foreach { request =>
-        val create = request match {
-          case r: CreateEpisodeRequest.YouTube => createEpisodeYouTube(r)
-          case r: CreateEpisodeRequest.File    => createEpisodeFile(r)
+        val (podcastId, externalSource, create) = request match {
+          case r: CreateEpisodeRequest.YouTube =>
+            (r.podcastId, r.playlistItem.snippet.resourceId.videoId, createEpisodeYouTube(r))
+          case r: CreateEpisodeRequest.File =>
+            (r.podcastId, r.file.getPath, createEpisodeFile(r))
         }
 
-        create.absorb.tapErrorCause { t =>
+        // Overlapping checks (e.g. the startup check and a manual one) can enqueue the same episode twice.
+        val createIfMissing = EpisodeDao.exists(podcastId, externalSource).flatMap {
+          case true  => ZIO.logDebug(s"Episode '$externalSource' already exists for Podcast $podcastId. Skipping.")
+          case false => create
+        }
+
+        createIfMissing.absorb.tapErrorCause { t =>
           ZIO.logErrorCause(s"Error creating episode for $request", t)
         }.ignore
       }

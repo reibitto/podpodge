@@ -19,9 +19,7 @@ object PublishDateOrderingSpec extends ZIOSpecDefault {
       assertTrue(sorted == List(subSecond, wholeSecond, earlier))
     },
     test("sorting by the stored text does NOT, which is why EpisodeDao sorts in Scala") {
-      // Guards the reasoning behind not using `ORDER BY publish_date DESC`: publish_date is TEXT, and the stored
-      // representation is variable-width, so SQLite's lexicographic comparison disagrees with chronological order.
-      // If this ever starts passing, the encoding became fixed-width and the query could sort in SQL again.
+      // If this starts failing, the stored format became fixed-width and EpisodeDao could use ORDER BY again.
       val lexicographic = List(earlier, subSecond, wholeSecond).map(_.format(stored)).sorted.reverse
       val chronological = List(subSecond, wholeSecond, earlier).map(_.format(stored))
 

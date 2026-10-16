@@ -11,10 +11,8 @@ sealed trait CreateEpisodeRequest
 object CreateEpisodeRequest {
 
   /** @param duration
-    *   resolved when the episode was enqueued, where durations for a whole page
-    *   of playlist items can be fetched in one batched API call. `None` if that
-    *   lookup failed or the video wasn't in the response -- duration is a
-    *   nice-to-have, so it never blocks creating the episode.
+    *   fetched in batches when enqueuing. `None` if the lookup failed, which
+    *   doesn't block episode creation.
     */
   final case class YouTube(podcastId: PodcastId, playlistItem: PlaylistItem, duration: Option[Duration])
       extends CreateEpisodeRequest
