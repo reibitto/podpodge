@@ -13,5 +13,6 @@ final case class Episode(
     duration: Duration,
     imageUrl: Uri,
     // Enclosure size in bytes. 0 if not downloaded yet, since YouTube episodes are fetched on demand.
-    mediaLength: Long
+    mediaLength: Long,
+    mediaType: String
 )

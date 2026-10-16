@@ -1,6 +1,7 @@
 package podpodge.controllers
 
-import podpodge.config as _
+import podpodge.config
+import podpodge.config.Config
 import podpodge.db.dao.ConfigurationDao
 import podpodge.db.patch.PatchConfiguration
 import podpodge.db.Configuration
@@ -14,7 +15,7 @@ object ConfigurationController {
   def getPrimary: RIO[DataSource, Configuration.Model] =
     ConfigurationDao.getPrimary
 
-  def patch(id: ConfigurationId, model: PatchConfiguration): RIO[DataSource, Configuration.Model] =
-    ConfigurationDao.patch(id, model)
+  def patch(id: ConfigurationId, model: PatchConfiguration): RIO[DataSource & Config, Configuration.Model] =
+    ConfigurationDao.patch(id, model) <* config.reload
 
 }

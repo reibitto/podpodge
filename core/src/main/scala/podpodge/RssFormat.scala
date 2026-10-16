@@ -37,7 +37,7 @@ object RssFormat {
           <link>{item.linkUrl}</link>
           <description>{item.title}</description>
           <pubDate>{item.publishDate.format(DateTimeFormatter.RFC_1123_DATE_TIME)}</pubDate>
-          <enclosure url={item.downloadUrl.toString} length={item.mediaLength.toString} type="audio/mpeg"/>
+          <enclosure url={item.downloadUrl.toString} length={item.mediaLength.toString} type={item.mediaType}/>
           <itunes:author>{podcast.author}</itunes:author>
           <itunes:subtitle>{item.title}</itunes:subtitle>
           <itunes:summary>{item.title}</itunes:summary>

@@ -37,7 +37,11 @@ object PodcastController {
       config   <- config.get
       podcast  <- PodcastDao.get(id).someOrFail(ApiError.NotFound(s"Podcast $id does not exist."))
       episodes <- EpisodeDao.listByPodcast(id)
-    } yield RssFormat.encode(rss.Podcast.fromDB(podcast, episodes, config))
+      // File.length is 0 for missing files, e.g. YouTube episodes that haven't been downloaded yet.
+      mediaLengths <- ZIO.attemptBlocking {
+                        episodes.map(e => e.id -> e.mediaFilePath(podcast.sourceType).toFile.length).toMap
+                      }
+    } yield RssFormat.encode(rss.Podcast.fromDB(podcast, episodes, mediaLengths, config))
 
   def getPodcastCover(
       id: PodcastId

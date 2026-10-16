@@ -7,10 +7,11 @@ import org.apache.pekko.stream.IOResult
 import org.apache.pekko.util.ByteString
 import podpodge.config
 import podpodge.config.Config
-import podpodge.db.dao.{ConfigurationDao, EpisodeDao, PodcastDao}
+import podpodge.db.dao.{EpisodeDao, PodcastDao}
 import podpodge.db.Episode
 import podpodge.http.ApiError
 import podpodge.types.*
+import podpodge.util.FileExtensions.*
 import podpodge.youtube.YouTubeDL
 import zio.*
 
@@ -40,7 +41,7 @@ object EpisodeController {
                       .filterOrFail(_.exists)(ApiError.NotFound(s"Media file for episode $id does not exist."))
                       .map { file =>
                         HttpEntity.Default(
-                          MediaType.audio("mpeg", MediaType.NotCompressible, "mp3"),
+                          MediaType.audio(file.audioMediaSubtype, MediaType.NotCompressible),
                           file.length,
                           FileIO.fromPath(file.toPath)
                         )
@@ -52,10 +53,7 @@ object EpisodeController {
       episodesDownloading: Ref.Synchronized[Map[EpisodeId, Promise[Throwable, File]]]
   )(episode: Episode.Model): RIO[DataSource & Config, HttpEntity.Default] =
     for {
-      // Read from the DB on each request so a PATCHed downloaderPath applies without a restart.
-      dbConfig      <- ConfigurationDao.getPrimary
-      startupConfig <- config.get
-      downloaderPath = dbConfig.downloaderPath.getOrElse(startupConfig.downloaderPath)
+      downloaderPath <- config.get.map(_.downloaderPath)
       // Uninterruptible so a canceled request can't fork the download without registering its promise.
       promiseMap <- ZIO.uninterruptible {
                       episodesDownloading.updateAndGetZIO { downloadMap =>

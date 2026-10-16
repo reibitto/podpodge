@@ -2,6 +2,8 @@ package podpodge.rss
 
 import podpodge.config.PodpodgeConfig
 import podpodge.db
+import podpodge.types.EpisodeId
+import podpodge.util.FileExtensions.*
 import sttp.model.Uri
 
 import java.time.OffsetDateTime
@@ -24,7 +26,12 @@ final case class Podcast(
 
 object Podcast {
 
-  def fromDB(podcast: db.Podcast.Model, episodes: List[db.Episode.Model], config: PodpodgeConfig): Podcast =
+  def fromDB(
+      podcast: db.Podcast.Model,
+      episodes: List[db.Episode.Model],
+      mediaLengths: Map[EpisodeId, Long],
+      config: PodpodgeConfig
+  ): Podcast =
     Podcast(
       podcast.title,
       podcast.linkUrl,
@@ -39,8 +46,6 @@ object Podcast {
       podcast.summary,
       config.baseUri.withPath("cover", podcast.id.unwrap.toString),
       episodes.map { episode =>
-        val mediaFile = episode.mediaFilePath(podcast.sourceType).toFile
-
         Episode(
           config.baseUri.withPath("episode", episode.id.unwrap.toString, "file"),
           episode.externalSource,
@@ -49,7 +54,8 @@ object Podcast {
           episode.publishDate,
           episode.duration,
           config.baseUri.withPath("thumbnail", episode.id.unwrap.toString),
-          if (mediaFile.exists()) mediaFile.length() else 0L
+          mediaLengths.getOrElse(episode.id, 0L),
+          s"audio/${episode.mediaFilePath(podcast.sourceType).toFile.audioMediaSubtype}"
         )
       }
     )

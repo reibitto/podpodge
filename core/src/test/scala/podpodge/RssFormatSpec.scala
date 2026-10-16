@@ -36,7 +36,8 @@ object RssFormatSpec extends ZIOSpecDefault {
   private def testEpisode(
       guid: String = "abc123",
       title: String = "Episode Title",
-      mediaLength: Long = 12345L
+      mediaLength: Long = 12345L,
+      mediaType: String = "audio/mpeg"
   ): Episode =
     Episode(
       downloadUrl = uri"https://example.com/episode/1/file",
@@ -46,7 +47,8 @@ object RssFormatSpec extends ZIOSpecDefault {
       publishDate = now,
       duration = Duration.ofMinutes(4).plusSeconds(13),
       imageUrl = uri"https://example.com/thumbnail.jpg",
-      mediaLength = mediaLength
+      mediaLength = mediaLength,
+      mediaType = mediaType
     )
 
   def spec = suite("RssFormatSpec")(
@@ -76,6 +78,10 @@ object RssFormatSpec extends ZIOSpecDefault {
     test("enclosure length reflects the episode's actual media size, not a hardcoded 0") {
       val xml = RssFormat.encode(testPodcast(items = List(testEpisode(mediaLength = 999L)))).toString
       assertTrue(xml.contains("""length="999""""), !xml.contains("""length="0""""))
+    },
+    test("enclosure type reflects the episode's media type") {
+      val xml = RssFormat.encode(testPodcast(items = List(testEpisode(mediaType = "audio/x-m4a")))).toString
+      assertTrue(xml.contains("""type="audio/x-m4a""""))
     },
     test("includes a self-referencing atom:link pointing at the feed's own URL") {
       val xml = RssFormat.encode(testPodcast()).toString
